@@ -1,0 +1,30 @@
+{% extends 'app/base.html' %}
+{% block title %}Mebel ro'yxati{% endblock %}
+{% block content %}
+    <section class="panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h2 style="margin: 0;">Sizning mebellaringiz</h2>
+            <a class="button button-primary" href="{% url 'furniture_create' %}">➕ Yangi mebel</a>
+        </div>
+        {% if furnitures %}
+            <div class="card-grid">
+                {% for furniture in furnitures %}
+                    <article class="card">
+                        <div class="card-title">{{ furniture.name }}</div>
+                        <div class="card-meta">So'nggi yangilangan: {{ furniture.updated_at|date:'Y-m-d H:i' }}</div>
+                        <dl class="price-list">
+                            <div><dt>Material narxi</dt><dd class="format-price">{{ furniture.material_total }}</dd></div>
+                            <div><dt>2% ustama</dt><dd class="format-price">{{ furniture.craft_fee_amount }}</dd></div>
+                            <div><dt>5% ustama</dt><dd class="format-price">{{ furniture.master_fee_amount }}</dd></div>
+                            <div><dt>10% ustama</dt><dd class="format-price">{{ furniture.owner_fee_amount }}</dd></div>
+                            <div class="price-total"><dt>Jami</dt><dd class="format-price">{{ furniture.total_price }}</dd></div>
+                        </dl>
+                        <a class="button button-secondary" href="{% url 'furniture_edit' furniture.pk %}">Tahrirlash</a>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="notice">Hech qanday mebel saqlanmagan. Birinchi mebelni qo‘shing.</p>
+        {% endif %}
+    </section>
+{% endblock %}

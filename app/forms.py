@@ -1,0 +1,48 @@
+from django import forms
+
+from .models import Furniture, FurnitureDetail
+
+
+class FurnitureForm(forms.ModelForm):
+    class Meta:
+        model = Furniture
+        fields = ['name', 'craft_fee_rate', 'master_fee_rate', 'owner_fee_rate']
+        labels = {
+            'name': 'Mebel nomi',
+            'craft_fee_rate': 'Detal ustama (%)',
+            'master_fee_rate': 'Usta haqi (%)',
+            'owner_fee_rate': 'Sizning foyda (%)',
+        }
+        widgets = {
+            'name': forms.TextInput(attrs={'placeholder': 'Mebel nomi', 'class': 'field-input'}),
+            'craft_fee_rate': forms.NumberInput(attrs={'class': 'field-input', 'step': '0.01', 'min': '0'}),
+            'master_fee_rate': forms.NumberInput(attrs={'class': 'field-input', 'step': '0.01', 'min': '0'}),
+            'owner_fee_rate': forms.NumberInput(attrs={'class': 'field-input', 'step': '0.01', 'min': '0'}),
+        }
+
+
+class FurnitureDetailForm(forms.ModelForm):
+    class Meta:
+        model = FurnitureDetail
+        fields = ['name', 'price', 'quantity']
+        labels = {
+            'name': 'Detal nomi',
+            'price': 'Narxi',
+            'quantity': 'Soni',
+        }
+        widgets = {
+            'name': forms.TextInput(attrs={'placeholder': 'Detal nomi', 'class': 'field-input'}),
+            'price': forms.NumberInput(attrs={'placeholder': 'Narxi', 'class': 'field-input price-input', 'step': '0.01', 'min': '0'}),
+            'quantity': forms.NumberInput(attrs={'placeholder': 'Soni', 'class': 'field-input quantity-input', 'min': '1'}),
+        }
+
+
+class BaseDetailFormSet(forms.BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        if any(
+            form.cleaned_data and not form.cleaned_data.get('DELETE', False)
+            for form in self.forms
+        ):
+            return
+        raise forms.ValidationError('Kamida bitta detal kiriting.')

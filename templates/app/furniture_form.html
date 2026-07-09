@@ -1,0 +1,100 @@
+{% extends 'app/base.html' %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+    <section class="panel form-panel">
+        <h2>{{ page_title }}</h2>
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="form-group">
+                {{ form.non_field_errors }}
+                {{ form.name.label_tag }}
+                {{ form.name }}
+                {{ form.name.errors }}
+            </div>
+            <div class="grid-2">
+                <div class="form-group">
+                    {{ form.craft_fee_rate.label_tag }}
+                    {{ form.craft_fee_rate }}
+                    {{ form.craft_fee_rate.errors }}
+                </div>
+                <div class="form-group">
+                    {{ form.master_fee_rate.label_tag }}
+                    {{ form.master_fee_rate }}
+                    {{ form.master_fee_rate.errors }}
+                </div>
+                <div class="form-group">
+                    {{ form.owner_fee_rate.label_tag }}
+                    {{ form.owner_fee_rate }}
+                    {{ form.owner_fee_rate.errors }}
+                </div>
+            </div>
+            <div class="detail-section">
+                <div class="section-header">
+                    <h3>Detal qo‘shish</h3>
+                    <button id="add-detail-row" class="button button-small">➕ Yangi detal</button>
+                </div>
+                <div id="detail-container">
+                    {% for form in formset.forms %}
+                        <div class="detail-row">
+                            <div class="grid-3">
+                                <div class="form-group">
+                                    {{ form.name.label_tag }}
+                                    {{ form.name }}
+                                    {{ form.name.errors }}
+                                </div>
+                                <div class="form-group">
+                                    {{ form.price.label_tag }}
+                                    {{ form.price }}
+                                    {{ form.price.errors }}
+                                </div>
+                                <div class="form-group">
+                                    {{ form.quantity.label_tag }}
+                                    {{ form.quantity }}
+                                    {{ form.quantity.errors }}
+                                </div>
+                            </div>
+                            {% if formset.can_delete %}
+                                <div class="delete-row">
+                                    {{ form.DELETE }}
+                                    <label class="delete-label" for="{{ form.DELETE.id_for_label }}">🗑️ O'chirish</label>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                {{ formset.management_form }}
+                <template id="empty-form">
+                    <div class="detail-row">
+                        <div class="grid-3">
+                            <div class="form-group">
+                                <label for="id_details-__prefix__-name">Detal nomi</label>
+                                <input type="text" name="details-__prefix__-name" class="field-input" id="id_details-__prefix__-name" placeholder="Detal nomi">
+                            </div>
+                            <div class="form-group">
+                                <label for="id_details-__prefix__-price">Narxi</label>
+                                <input type="number" step="0.01" min="0" name="details-__prefix__-price" class="field-input price-input" id="id_details-__prefix__-price" placeholder="Narxi">
+                            </div>
+                            <div class="form-group">
+                                <label for="id_details-__prefix__-quantity">Soni</label>
+                                <input type="number" name="details-__prefix__-quantity" class="field-input quantity-input" id="id_details-__prefix__-quantity" min="1" value="1" placeholder="Soni">
+                            </div>
+                        </div>
+                        <div class="delete-row">
+                            <input type="checkbox" name="details-__prefix__-DELETE" id="id_details-__prefix__-DELETE">
+                            <label class="delete-label" for="id_details-__prefix__-DELETE">🗑️ O'chirish</label>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            <section class="summary-card">
+                <h3>Hisoblab ko‘rish</h3>
+                <div class="summary-row"><span>Material yig‘indisi</span><strong id="preview-material">0.00</strong></div>
+                <div class="summary-row"><span>1-bosqich: {{ form.craft_fee_rate.value|default:'2' }}% ustama</span><strong id="preview-craft">0.00</strong></div>
+                <div class="summary-row"><span>2-bosqich: {{ form.master_fee_rate.value|default:'5' }}% ustama</span><strong id="preview-master">0.00</strong></div>
+                <div class="summary-row"><span>3-bosqich: {{ form.owner_fee_rate.value|default:'10' }}% foyda</span><strong id="preview-owner">0.00</strong></div>
+                <div class="summary-row total-row"><span>Jami narx</span><strong id="preview-total">0.00</strong></div>
+            </section>
+            <button type="submit" class="button button-primary full-width">Saqlash</button>
+        </form>
+    </section>
+{% endblock %}

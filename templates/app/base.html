@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Mebel narxlash{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'app/styles.css' %}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <div class="navbar-brand">
+                <h1>Mebel narxlash</h1>
+                <p>Detal va ustama hisoblari</p>
+            </div>
+            <div class="navbar-actions">
+                <a class="navbar-link" href="{% url 'furniture_list' %}">📋 Ro'yxat</a>
+                <a class="button button-primary" href="{% url 'furniture_create' %}">➕ Yangi mebel</a>
+                {% if not request.resolver_match.url_name|stringformat:"s" == "furniture_list" %}
+                    <a class="navbar-link back-link" href="{% url 'furniture_list' %}">← Orqaga</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+    <script>
+        function formatNumber(num) {
+            return parseFloat(num).toLocaleString('uz-UZ', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+
+        window.addEventListener('DOMContentLoaded', function() {
+            // Format all price elements
+            document.querySelectorAll('.format-price').forEach(function(el) {
+                el.textContent = formatNumber(el.textContent);
+            });
+
+            function updateSummary() {
+                if (!document.querySelector('#id_craft_fee_rate')) return;
+                const rows = document.querySelectorAll('.detail-row');
+                let material = 0;
+                rows.forEach(function(row) {
+                    const deleteCheckbox = row.querySelector('input[type="checkbox"][name*="-DELETE"]');
+                    if (deleteCheckbox && deleteCheckbox.checked) return;
+                    const price = parseFloat(row.querySelector('.price-input').value) || 0;
+                    const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
+                    material += price * quantity;
+                });
+                const craftRate = parseFloat(document.querySelector('#id_craft_fee_rate').value) || 0;
+                const masterRate = parseFloat(document.querySelector('#id_master_fee_rate').value) || 0;
+                const ownerRate = parseFloat(document.querySelector('#id_owner_fee_rate').value) || 0;
+                const craftAmount = material * craftRate / 100;
+                const subtotal1 = material + craftAmount;
+                const masterAmount = subtotal1 * masterRate / 100;
+                const subtotal2 = subtotal1 + masterAmount;
+                const ownerAmount = subtotal2 * ownerRate / 100;
+                const total = subtotal2 + ownerAmount;
+                document.querySelector('#preview-material').textContent = formatNumber(material);
+                document.querySelector('#preview-craft').textContent = formatNumber(craftAmount);
+                document.querySelector('#preview-master').textContent = formatNumber(masterAmount);
+                document.querySelector('#preview-owner').textContent = formatNumber(ownerAmount);
+                document.querySelector('#preview-total').textContent = formatNumber(total);
+            }
+
+            const fieldSelectors = ['#id_craft_fee_rate', '#id_master_fee_rate', '#id_owner_fee_rate'];
+            fieldSelectors.forEach(function(selector) {
+                const element = document.querySelector(selector);
+                if (element) {
+                    element.addEventListener('input', updateSummary);
+                }
+            });
+            document.body.addEventListener('input', function(event) {
+                if (event.target.matches('.price-input, .quantity-input')) {
+                    updateSummary();
+                }
+            });
+            document.body.addEventListener('change', function(event) {
+                if (event.target.matches('input[type="checkbox"][name*="-DELETE"]')) {
+                    const row = event.target.closest('.detail-row');
+                    if (event.target.checked) {
+                        // Mark as deleted visually but keep it for form submission
+                        row.style.opacity = '0.4';
+                        row.style.pointerEvents = 'none';
+                        row.style.backgroundColor = '#fee2e2';
+                    } else {
+                        // Restore the row
+                        row.style.opacity = '1';
+                        row.style.pointerEvents = 'auto';
+                        row.style.backgroundColor = '#f8fafc';
+                    }
+                    updateSummary();
+                }
+            });
+            // Handle delete label clicks for instant deletion
+            const setupDeleteLabels = function() {
+                document.querySelectorAll('.delete-label').forEach(function(label) {
+                    if (label.dataset.setupDone) return;
+                    label.dataset.setupDone = 'true';
+                    label.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const checkbox = label.previousElementSibling;
+                        if (checkbox && checkbox.type === 'checkbox') {
+                            checkbox.checked = !checkbox.checked;
+                            const changeEvent = new Event('change', { bubbles: true });
+                            checkbox.dispatchEvent(changeEvent);
+                        }
+                    });
+                });
+            };
+            setupDeleteLabels();
+            const addRow = document.querySelector('#add-detail-row');
+            if (addRow) {
+                addRow.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const detailContainer = document.querySelector('#detail-container');
+                    const totalForms = document.querySelector('#id_details-TOTAL_FORMS');
+                    const formIndex = parseInt(totalForms.value, 10);
+                    const emptyRow = document.querySelector('#empty-form').innerHTML.replace(/__prefix__/g, formIndex);
+                    detailContainer.insertAdjacentHTML('beforeend', emptyRow);
+                    totalForms.value = formIndex + 1;
+                    setupDeleteLabels(); // Setup delete labels for new row
+                    updateSummary();
+                });
+            }
+            updateSummary();
+        });
+    </script>
+</body>
+</html>
