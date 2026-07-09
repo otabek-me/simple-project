@@ -36,6 +36,7 @@
                 <div id="detail-container">
                     {% for form in formset.forms %}
                         <div class="detail-row">
+                            {{ form.id }}
                             <div class="grid-3">
                                 <div class="form-group">
                                     {{ form.name.label_tag }}

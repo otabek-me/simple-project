@@ -15,9 +15,9 @@ class FurnitureForm(forms.ModelForm):
         }
         widgets = {
             'name': forms.TextInput(attrs={'placeholder': 'Mebel nomi', 'class': 'field-input'}),
-            'craft_fee_rate': forms.NumberInput(attrs={'class': 'field-input', 'step': '0.01', 'min': '0'}),
-            'master_fee_rate': forms.NumberInput(attrs={'class': 'field-input', 'step': '0.01', 'min': '0'}),
-            'owner_fee_rate': forms.NumberInput(attrs={'class': 'field-input', 'step': '0.01', 'min': '0'}),
+            'craft_fee_rate': forms.NumberInput(attrs={'class': 'field-input', 'step': '1', 'min': '0', 'max': '99999999', 'inputmode': 'numeric', 'pattern': '[0-9]*'}),
+            'master_fee_rate': forms.NumberInput(attrs={'class': 'field-input', 'step': '1', 'min': '0', 'max': '99999999', 'inputmode': 'numeric', 'pattern': '[0-9]*'}),
+            'owner_fee_rate': forms.NumberInput(attrs={'class': 'field-input', 'step': '1', 'min': '0', 'max': '99999999', 'inputmode': 'numeric', 'pattern': '[0-9]*'}),
         }
 
 
@@ -32,8 +32,8 @@ class FurnitureDetailForm(forms.ModelForm):
         }
         widgets = {
             'name': forms.TextInput(attrs={'placeholder': 'Detal nomi', 'class': 'field-input'}),
-            'price': forms.NumberInput(attrs={'placeholder': 'Narxi', 'class': 'field-input price-input', 'step': '0.01', 'min': '0'}),
-            'quantity': forms.NumberInput(attrs={'placeholder': 'Soni', 'class': 'field-input quantity-input', 'min': '1'}),
+            'price': forms.NumberInput(attrs={'placeholder': 'Narxi', 'class': 'field-input price-input', 'step': '1', 'min': '0', 'inputmode': 'numeric', 'pattern': '[0-9]*'}),
+            'quantity': forms.NumberInput(attrs={'placeholder': 'Soni', 'class': 'field-input quantity-input', 'min': '1', 'step': '1'}),
         }
 
 
