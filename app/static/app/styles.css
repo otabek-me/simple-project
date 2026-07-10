@@ -520,6 +520,130 @@ body {
   color: var(--muted);
 }
 
+/* Messages container - fixed at the very top */
+.messages-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  padding: 12px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.message {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  font-weight: 600;
+  animation: slideDown 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.message-success {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.message-info {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.message-warning {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.message-close {
+  background: transparent;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+  line-height: 1;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+.message-close:hover {
+  opacity: 1;
+}
+
+/* Error list styling */
+.errorlist {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+}
+
+.errorlist li {
+  color: var(--danger);
+  font-size: 0.88rem;
+  font-weight: 500;
+  padding: 4px 0;
+}
+
+.form-group.has-error .field-input,
+.field-input.error {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.form-group.has-error label {
+  color: var(--danger);
+}
+
+/* Formset non-form errors */
+.formset-errors {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+}
+
+.formset-errors ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.formset-errors li {
+  color: #991b1b;
+  font-weight: 500;
+  padding: 2px 0;
+}
+
 @media (max-width: 640px) {
   .site-header,
   .panel {

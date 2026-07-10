@@ -61,6 +61,24 @@ class FurnitureForm(forms.ModelForm):
             'master_fee_rate': forms.NumberInput(attrs={'class': 'field-input', 'step': '1', 'min': '0', 'max': '99999999', 'inputmode': 'numeric', 'pattern': '[0-9]*'}),
             'owner_fee_rate': forms.NumberInput(attrs={'class': 'field-input', 'step': '1', 'min': '0', 'max': '99999999', 'inputmode': 'numeric', 'pattern': '[0-9]*'}),
         }
+        error_messages = {
+            'name': {
+                'required': 'Mebel nomini kiriting.',
+                'max_length': 'Mebel nomi 120 ta belgidan oshmasligi kerak.',
+            },
+            'craft_fee_rate': {
+                'invalid': 'Iltimos, to‘g‘ri foiz kiriting.',
+                'min_value': 'Foiz 0 dan kichik bo‘lishi mumkin emas.',
+            },
+            'master_fee_rate': {
+                'invalid': 'Iltimos, to‘g‘ri foiz kiriting.',
+                'min_value': 'Foiz 0 dan kichik bo‘lishi mumkin emas.',
+            },
+            'owner_fee_rate': {
+                'invalid': 'Iltimos, to‘g‘ri foiz kiriting.',
+                'min_value': 'Foiz 0 dan kichik bo‘lishi mumkin emas.',
+            },
+        }
 
 
 class DetailChoiceField(forms.ModelChoiceField):
@@ -74,6 +92,10 @@ class FurnitureDetailForm(forms.ModelForm):
         label='Detal',
         empty_label='- Detal tanlang -',
         widget=forms.Select(attrs={'class': 'field-input detail-select'}),
+        error_messages={
+            'required': 'Detalni tanlang.',
+            'invalid_choice': 'Noto‘g‘ri detal tanlandi.',
+        },
     )
 
     class Meta:
@@ -84,7 +106,14 @@ class FurnitureDetailForm(forms.ModelForm):
             'quantity': 'Soni',
         }
         widgets = {
-            'quantity': forms.NumberInput(attrs={'placeholder': 'Soni', 'class': 'field-input quantity-input', 'min': '1', 'step': '1'}),
+            'quantity': forms.NumberInput(attrs={'placeholder': 'Soni (mas: 2.5)', 'class': 'field-input quantity-input', 'min': '0.01', 'step': '0.01'}),
+        }
+        error_messages = {
+            'quantity': {
+                'required': 'Soni maydonini to‘ldiring.',
+                'invalid': 'Iltimos, to‘g‘ri son kiriting (masalan: 2.5).',
+                'min_value': 'Soni 0.01 dan kichik bo‘lishi mumkin emas.',
+            },
         }
 
 
@@ -99,6 +128,17 @@ class DetailForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'placeholder': 'Detal nomi', 'class': 'field-input'}),
             'price': forms.NumberInput(attrs={'placeholder': 'Narxi', 'class': 'field-input', 'step': '1', 'min': '0', 'inputmode': 'numeric', 'pattern': '[0-9]*'}),
+        }
+        error_messages = {
+            'name': {
+                'required': 'Detal nomini kiriting.',
+                'max_length': 'Detal nomi 120 ta belgidan oshmasligi kerak.',
+            },
+            'price': {
+                'required': 'Narxni kiriting.',
+                'invalid': 'Iltimos, to‘g‘ri narx kiriting.',
+                'min_value': 'Narx 0 dan kichik bo‘lishi mumkin emas.',
+            },
         }
 
 

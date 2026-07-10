@@ -116,9 +116,11 @@ class FurnitureDetail(models.Model):
         blank=True,
         null=True,
     )
-    quantity = models.PositiveIntegerField(
-        default=1,
-        validators=[MinValueValidator(1)],
+    quantity = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('1.00'),
+        validators=[MinValueValidator(Decimal('0.01'))],
     )
     price = models.DecimalField(
         max_digits=20,

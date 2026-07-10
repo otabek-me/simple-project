@@ -41,11 +41,36 @@
             return parseFloat(num).toLocaleString('uz-UZ', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
 
+        function scrollToFirstError() {
+            const firstError = document.querySelector('.has-error, .errorlist, .error');
+            if (firstError) {
+                const target = firstError.closest('.form-group, .detail-row, .panel') || firstError;
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Highlight the field
+                const input = target.querySelector('input, select, textarea');
+                if (input) {
+                    input.focus();
+                    input.style.outline = '2px solid #e74c3c';
+                    input.style.outlineOffset = '2px';
+                }
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', function() {
+            // Auto-dismiss messages after 8 seconds
+            document.querySelectorAll('.message').forEach(function(msg) {
+                setTimeout(function() {
+                    if (msg.parentElement) msg.remove();
+                }, 8000);
+            });
+
             // Format all price elements
             document.querySelectorAll('.format-price').forEach(function(el) {
                 el.textContent = formatNumber(el.textContent);
             });
+
+            // Scroll to first error if any
+            scrollToFirstError();
 
             function updateSummary() {
                 if (!document.querySelector('#id_craft_fee_rate')) return;

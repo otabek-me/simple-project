@@ -86,6 +86,21 @@ def furniture_create(request):
                 detail.delete()
             furniture.recalculate().save()
             return redirect(reverse('furniture_list'))
+        else:
+            errors = []
+            if not form.is_valid():
+                for field, errs in form.errors.items():
+                    for err in errs:
+                        errors.append(str(err))
+            if not formset.is_valid():
+                if formset.non_form_errors():
+                    errors.extend(formset.non_form_errors())
+                for f in formset.forms:
+                    for field, errs in f.errors.items():
+                        for err in errs:
+                            errors.append(str(err))
+            if errors:
+                messages.error(request, 'Ma\'lumotlarni to\'g\'ri to\'ldiring! Xatoliklarni tekshiring.')
     else:
         form = FurnitureForm(instance=furniture)
         formset = DetailFormSet(instance=furniture, prefix='details')
@@ -116,6 +131,21 @@ def furniture_edit(request, pk):
                 detail.delete()
             furniture.recalculate().save()
             return redirect(reverse('furniture_list'))
+        else:
+            errors = []
+            if not form.is_valid():
+                for field, errs in form.errors.items():
+                    for err in errs:
+                        errors.append(str(err))
+            if not formset.is_valid():
+                if formset.non_form_errors():
+                    errors.extend(formset.non_form_errors())
+                for f in formset.forms:
+                    for field, errs in f.errors.items():
+                        for err in errs:
+                            errors.append(str(err))
+            if errors:
+                messages.error(request, 'Ma\'lumotlarni to\'g\'ri to\'ldiring! Xatoliklarni tekshiring.')
     else:
         form = FurnitureForm(instance=furniture)
         formset = DetailFormSet(instance=furniture, prefix='details')
