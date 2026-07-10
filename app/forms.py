@@ -1,6 +1,48 @@
 from django import forms
+from django.contrib.auth import password_validation
+from django.contrib.auth.forms import AuthenticationForm as DjangoAuthenticationForm
+from django.contrib.auth.forms import PasswordChangeForm as DjangoPasswordChangeForm
+from django.core.exceptions import ValidationError
 
 from .models import Detail, Furniture, FurnitureDetail
+
+
+def _translate_password_error(message):
+    translations = {
+        'This password is too short. It must contain at least 8 characters.': 'Parol juda qisqa. Kamida 8 ta belgidan iborat bo‘lishi kerak.',
+        'This password is too common.': 'Parol juda oddiy.',
+        'This password is entirely numeric.': 'Parol faqat raqamlardan iborat.',
+        'The password is too similar to the username.': 'Parol foydalanuvchi nomiga juda o‘xshash.',
+        'This password is too similar to the username.': 'Parol foydalanuvchi nomiga juda o‘xshash.',
+    }
+    return translations.get(message, message)
+
+
+class UzbekAuthenticationForm(DjangoAuthenticationForm):
+    error_messages = {
+        **DjangoAuthenticationForm.error_messages,
+        'invalid_login': 'Foydalanuvchi nomi yoki parol noto‘g‘ri.',
+        'inactive': 'Bu foydalanuvchi faol emas.',
+    }
+
+
+class UzbekPasswordChangeForm(DjangoPasswordChangeForm):
+    error_messages = {
+        **DjangoPasswordChangeForm.error_messages,
+        'password_incorrect': 'Eski parol noto‘g‘ri.',
+        'password_mismatch': 'Yangi parollar mos kelmadi.',
+    }
+
+    def clean_new_password1(self):
+        password = self.cleaned_data.get('new_password1')
+        if password:
+            try:
+                password_validation.validate_password(password, self.user)
+            except ValidationError as exc:
+                raise forms.ValidationError([
+                    _translate_password_error(message) for message in exc.messages
+                ]) from exc
+        return password
 
 
 class FurnitureForm(forms.ModelForm):

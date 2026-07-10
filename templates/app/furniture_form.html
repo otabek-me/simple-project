@@ -94,4 +94,27 @@
             <button type="submit" class="button button-primary full-width">Saqlash</button>
         </form>
     </section>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const addButton = document.getElementById('add-detail-row');
+            const container = document.getElementById('detail-container');
+            const totalForms = document.getElementById('id_details-TOTAL_FORMS');
+            const template = document.getElementById('empty-form');
+
+            if (!addButton || !container || !totalForms || !template) {
+                return;
+            }
+
+            addButton.addEventListener('click', function (event) {
+                event.preventDefault();
+                const formCount = parseInt(totalForms.value, 10) || 0;
+                const formMarkup = template.innerHTML.replace(/__prefix__/g, formCount);
+                const wrapper = document.createElement('div');
+                wrapper.className = 'detail-row';
+                wrapper.innerHTML = formMarkup;
+                container.appendChild(wrapper);
+                totalForms.value = String(formCount + 1);
+            });
+        });
+    </script>
 {% endblock %}

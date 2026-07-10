@@ -259,6 +259,36 @@ body {
   font-size: 0.9rem;
 }
 
+.password-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+.password-input-wrap .field-input {
+  flex: 1;
+  padding-right: 42px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0;
+  line-height: 1;
+}
+
+.password-toggle:hover {
+  color: var(--primary);
+}
+
 .full-width {
   width: 100%;
 }

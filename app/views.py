@@ -1,44 +1,50 @@
 from django.contrib import messages
 from django.contrib.auth import login, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.forms import inlineformset_factory
 
 from .models import Detail, Furniture, FurnitureDetail
-from .forms import DetailForm, FurnitureForm, FurnitureDetailForm, BaseDetailFormSet
+from .forms import (
+    DetailForm,
+    FurnitureForm,
+    FurnitureDetailForm,
+    BaseDetailFormSet,
+    UzbekAuthenticationForm,
+    UzbekPasswordChangeForm,
+)
 
 DetailFormSet = inlineformset_factory(
     Furniture,
     FurnitureDetail,
     form=FurnitureDetailForm,
     formset=BaseDetailFormSet,
-    extra=1,
+    extra=0,
     can_delete=True,
 )
 
 
 def auth_page(request):
     if request.method == 'POST' and 'login_submit' in request.POST:
-        login_form = AuthenticationForm(request, data=request.POST)
+        login_form = UzbekAuthenticationForm(request, data=request.POST)
         if login_form.is_valid():
             login(request, login_form.get_user())
             return redirect(reverse('furniture_list'))
     else:
-        login_form = AuthenticationForm(request)
+        login_form = UzbekAuthenticationForm(request)
 
     password_form = None
     if request.user.is_authenticated:
         if request.method == 'POST' and 'password_submit' in request.POST:
-            password_form = PasswordChangeForm(request.user, data=request.POST)
+            password_form = UzbekPasswordChangeForm(request.user, data=request.POST)
             if password_form.is_valid():
                 password_form.save()
                 update_session_auth_hash(request, password_form.user)
                 messages.success(request, 'Parol muvaffaqiyatli o\'zgartirildi.')
-                return redirect(reverse('login'))
+                return redirect(reverse('furniture_list'))
         else:
-            password_form = PasswordChangeForm(request.user)
+            password_form = UzbekPasswordChangeForm(request.user)
 
     login_form.fields['username'].widget.attrs.update({'class': 'field-input', 'placeholder': 'Foydalanuvchi nomi'})
     login_form.fields['password'].widget.attrs.update({'class': 'field-input', 'placeholder': 'Parol'})

@@ -63,4 +63,34 @@
             {% endif %}
         </div>
     </section>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('input[type="password"]').forEach(function (input) {
+                if (input.parentElement && input.parentElement.classList.contains('password-input-wrap')) {
+                    return;
+                }
+
+                const wrap = document.createElement('div');
+                wrap.className = 'password-input-wrap';
+
+                const parent = input.parentNode;
+                parent.insertBefore(wrap, input);
+                wrap.appendChild(input);
+
+                const toggle = document.createElement('button');
+                toggle.type = 'button';
+                toggle.className = 'password-toggle';
+                toggle.setAttribute('aria-label', 'Parolni ko‘rsatish');
+                toggle.innerHTML = '👁';
+                toggle.addEventListener('click', function () {
+                    const isHidden = input.type === 'password';
+                    input.type = isHidden ? 'text' : 'password';
+                    toggle.innerHTML = isHidden ? '🙈' : '👁';
+                    toggle.setAttribute('aria-label', isHidden ? 'Parolni yashirish' : 'Parolni ko‘rsatish');
+                });
+
+                wrap.appendChild(toggle);
+            });
+        });
+    </script>
 {% endblock %}

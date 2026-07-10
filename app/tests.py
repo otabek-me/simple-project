@@ -34,14 +34,35 @@ class FurnitureEditTests(TestCase):
             'password_submit': '1',
         })
         self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], reverse('furniture_list'))
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password('NewStrong123!'))
+
+    def test_password_change_displays_uzbek_error_messages(self):
+        self.client.force_login(self.user)
+        response = self.client.post(reverse('login'), {
+            'old_password': 'wrong-password',
+            'new_password1': 'abc123',
+            'new_password2': 'abc123',
+            'password_submit': '1',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Eski parol noto‘g‘ri')
 
     def test_edit_page_renders_hidden_formset_ids(self):
         response = self.client.get(reverse('furniture_edit', args=[self.furniture.pk]))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'name="details-0-id"')
+        self.assertNotContains(response, 'name="details-1-detail"')
+
+    def test_create_page_does_not_render_initial_empty_detail_form(self):
+        response = self.client.get(reverse('furniture_create'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'name="details-0-detail"')
+        self.assertContains(response, 'id="add-detail-row"')
 
     def test_editing_furniture_saves_changes(self):
         response = self.client.post(
