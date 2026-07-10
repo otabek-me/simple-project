@@ -19,7 +19,13 @@
                             <div><dt>10% ustama</dt><dd class="format-price">{{ furniture.owner_fee_amount }}</dd></div>
                             <div class="price-total"><dt>Jami</dt><dd class="format-price">{{ furniture.total_price }}</dd></div>
                         </dl>
-                        <a class="button button-secondary" href="{% url 'furniture_edit' furniture.pk %}">Tahrirlash</a>
+                        <div class="card-actions">
+                            <a class="button button-secondary" href="{% url 'furniture_edit' furniture.pk %}">Tahrirlash</a>
+                            <form method="post" action="{% url 'furniture_delete' furniture.pk %}" onsubmit="return confirm('Siz rostdan ham bu mebelni oʻchirmoqchimisiz?');" style="display:inline-block; margin-left: 8px;">
+                                {% csrf_token %}
+                                <button class="button button-danger" type="submit">O'chirish</button>
+                            </form>
+                        </div>
                     </article>
                 {% endfor %}
             </div>

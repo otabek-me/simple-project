@@ -74,3 +74,10 @@ def furniture_edit(request, pk):
         'page_title': f"{furniture.name} narxini yangilash",
         'furniture': furniture,
     })
+
+
+def furniture_delete(request, pk):
+    furniture = get_object_or_404(Furniture, pk=pk)
+    if request.method == 'POST':
+        furniture.delete()
+    return redirect(reverse('furniture_list'))

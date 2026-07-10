@@ -42,6 +42,12 @@ class FurnitureEditTests(TestCase):
         self.assertEqual(self.furniture.name, 'Yangi shkaf')
         self.assertEqual(self.detail.price, 150000)
 
+    def test_delete_furniture_removes_record_and_redirects(self):
+        response = self.client.post(reverse('furniture_delete', args=[self.furniture.pk]))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Furniture.objects.filter(pk=self.furniture.pk).exists())
+
     def test_money_and_percent_fields_require_whole_numbers_and_limit_digits(self):
         form = FurnitureForm(data={
             'name': 'Shkaf',
