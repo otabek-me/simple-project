@@ -16,7 +16,13 @@
             </div>
             <div class="navbar-actions">
                 <a class="navbar-link" href="{% url 'furniture_list' %}">📋 Ro'yxat</a>
+                <a class="navbar-link" href="{% url 'detail_list' %}">🧩 Detallar</a>
                 <a class="button button-primary" href="{% url 'furniture_create' %}">➕ Yangi mebel</a>
+                {% if user.is_authenticated %}
+                    <a class="navbar-link" href="{% url 'logout' %}">Chiqish</a>
+                {% else %}
+                    <a class="navbar-link" href="{% url 'login' %}">Kirish</a>
+                {% endif %}
                 {% if not request.resolver_match.url_name|stringformat:"s" == "furniture_list" %}
                     <a class="navbar-link back-link" href="{% url 'furniture_list' %}">← Orqaga</a>
                 {% endif %}
@@ -44,8 +50,14 @@
                 rows.forEach(function(row) {
                     const deleteCheckbox = row.querySelector('input[type="checkbox"][name*="-DELETE"]');
                     if (deleteCheckbox && deleteCheckbox.checked) return;
-                    const price = parseFloat(row.querySelector('.price-input').value) || 0;
+                    const select = row.querySelector('.detail-select');
                     const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
+                    let price = 0;
+                    if (select && select.selectedIndex >= 0) {
+                        const selectedOption = select.options[select.selectedIndex];
+                        const priceText = selectedOption.text.split('—').pop().trim();
+                        price = parseFloat(priceText.replace(/,/g, '')) || 0;
+                    }
                     material += price * quantity;
                 });
                 const craftRate = parseFloat(document.querySelector('#id_craft_fee_rate').value) || 0;
@@ -80,15 +92,9 @@
                 if (event.target.matches('input[type="checkbox"][name*="-DELETE"]')) {
                     const row = event.target.closest('.detail-row');
                     if (event.target.checked) {
-                        // Mark as deleted visually but keep it for form submission
-                        row.style.opacity = '0.4';
-                        row.style.pointerEvents = 'none';
-                        row.style.backgroundColor = '#fee2e2';
+                        row.style.display = 'none';
                     } else {
-                        // Restore the row
-                        row.style.opacity = '1';
-                        row.style.pointerEvents = 'auto';
-                        row.style.backgroundColor = '#f8fafc';
+                        row.style.display = 'block';
                     }
                     updateSummary();
                 }

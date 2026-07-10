@@ -1,14 +1,25 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from .forms import FurnitureDetailForm, FurnitureForm
-from .models import Furniture, FurnitureDetail
+from .forms import DetailForm, FurnitureDetailForm, FurnitureForm
+from .models import Detail, Furniture, FurnitureDetail
 
 
 class FurnitureEditTests(TestCase):
     def setUp(self):
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(username='admin', password='password')
+        self.client.force_login(self.user)
         self.furniture = Furniture.objects.create(name='Shkaf', craft_fee_rate=2, master_fee_rate=5, owner_fee_rate=10)
-        self.detail = FurnitureDetail.objects.create(furniture=self.furniture, name='Panel', price=100000, quantity=2)
+        self.detail_template = Detail.objects.create(name='Panel', price=100000)
+        self.detail = FurnitureDetail.objects.create(furniture=self.furniture, detail=self.detail_template, quantity=2)
+
+    def test_login_required_for_list(self):
+        self.client.logout()
+        response = self.client.get(reverse('furniture_list'))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login/', response['Location'])
 
     def test_edit_page_renders_hidden_formset_ids(self):
         response = self.client.get(reverse('furniture_edit', args=[self.furniture.pk]))
@@ -29,9 +40,8 @@ class FurnitureEditTests(TestCase):
                 'details-MIN_NUM_FORMS': '0',
                 'details-MAX_NUM_FORMS': '1000',
                 'details-0-id': str(self.detail.pk),
-                'details-0-name': 'Panel',
-                'details-0-price': '150000',
-                'details-0-quantity': '2',
+                'details-0-detail': str(self.detail_template.pk),
+                'details-0-quantity': '3',
                 'details-0-DELETE': '',
             },
         )
@@ -40,7 +50,8 @@ class FurnitureEditTests(TestCase):
         self.furniture.refresh_from_db()
         self.detail.refresh_from_db()
         self.assertEqual(self.furniture.name, 'Yangi shkaf')
-        self.assertEqual(self.detail.price, 150000)
+        self.assertEqual(self.detail.quantity, 3)
+        self.assertEqual(self.detail.price, 100000)
 
     def test_delete_furniture_removes_record_and_redirects(self):
         response = self.client.post(reverse('furniture_delete', args=[self.furniture.pk]))
@@ -59,10 +70,9 @@ class FurnitureEditTests(TestCase):
         self.assertIn('craft_fee_rate', form.errors)
         self.assertIn('master_fee_rate', form.errors)
 
-        detail_form = FurnitureDetailForm(data={
+        detail_form = DetailForm(data={
             'name': 'Panel',
             'price': '150000.5',
-            'quantity': '2',
         })
         self.assertFalse(detail_form.is_valid())
         self.assertIn('price', detail_form.errors)

@@ -30,23 +30,19 @@
             </div>
             <div class="detail-section">
                 <div class="section-header">
-                    <h3>Detal qo‘shish</h3>
+                    <h3>Mebel uchun detallar</h3>
                     <button id="add-detail-row" class="button button-small">➕ Yangi detal</button>
                 </div>
+                {{ formset.management_form }}
                 <div id="detail-container">
                     {% for form in formset.forms %}
                         <div class="detail-row">
                             {{ form.id }}
-                            <div class="grid-3">
+                            <div class="grid-2">
                                 <div class="form-group">
-                                    {{ form.name.label_tag }}
-                                    {{ form.name }}
-                                    {{ form.name.errors }}
-                                </div>
-                                <div class="form-group">
-                                    {{ form.price.label_tag }}
-                                    {{ form.price }}
-                                    {{ form.price.errors }}
+                                    {{ form.detail.label_tag }}
+                                    {{ form.detail }}
+                                    {{ form.detail.errors }}
                                 </div>
                                 <div class="form-group">
                                     {{ form.quantity.label_tag }}
@@ -63,21 +59,21 @@
                         </div>
                     {% endfor %}
                 </div>
-                {{ formset.management_form }}
                 <template id="empty-form">
                     <div class="detail-row">
-                        <div class="grid-3">
+                        <div class="grid-2">
                             <div class="form-group">
-                                <label for="id_details-__prefix__-name">Detal nomi</label>
-                                <input type="text" name="details-__prefix__-name" class="field-input" id="id_details-__prefix__-name" placeholder="Detal nomi">
-                            </div>
-                            <div class="form-group">
-                                <label for="id_details-__prefix__-price">Narxi</label>
-                                <input type="number" step="0.01" min="0" name="details-__prefix__-price" class="field-input price-input" id="id_details-__prefix__-price" placeholder="Narxi">
+                                <label for="id_details-__prefix__-detail">Detal</label>
+                                <select name="details-__prefix__-detail" class="field-input detail-select" id="id_details-__prefix__-detail">
+                                    <option value="">- Detal tanlang -</option>
+                                    {% for detail in detail_options %}
+                                        <option value="{{ detail.pk }}">{{ detail.name }} — {{ detail.price }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label for="id_details-__prefix__-quantity">Soni</label>
-                                <input type="number" name="details-__prefix__-quantity" class="field-input quantity-input" id="id_details-__prefix__-quantity" min="1" value="1" placeholder="Soni">
+                                <input type="number" name="details-__prefix__-quantity" class="field-input quantity-input" id="id_details-__prefix__-quantity" min="1" step="1" value="1">
                             </div>
                         </div>
                         <div class="delete-row">

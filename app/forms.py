@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Furniture, FurnitureDetail
+from .models import Detail, Furniture, FurnitureDetail
 
 
 class FurnitureForm(forms.ModelForm):
@@ -21,19 +21,42 @@ class FurnitureForm(forms.ModelForm):
         }
 
 
+class DetailChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return f"{obj.name} — {obj.price}"
+
+
 class FurnitureDetailForm(forms.ModelForm):
+    detail = DetailChoiceField(
+        queryset=Detail.objects.all(),
+        label='Detal',
+        empty_label='- Detal tanlang -',
+        widget=forms.Select(attrs={'class': 'field-input detail-select'}),
+    )
+
     class Meta:
         model = FurnitureDetail
-        fields = ['name', 'price', 'quantity']
+        fields = ['detail', 'quantity']
         labels = {
-            'name': 'Detal nomi',
-            'price': 'Narxi',
+            'detail': 'Detal',
             'quantity': 'Soni',
         }
         widgets = {
-            'name': forms.TextInput(attrs={'placeholder': 'Detal nomi', 'class': 'field-input'}),
-            'price': forms.NumberInput(attrs={'placeholder': 'Narxi', 'class': 'field-input price-input', 'step': '1', 'min': '0', 'inputmode': 'numeric', 'pattern': '[0-9]*'}),
             'quantity': forms.NumberInput(attrs={'placeholder': 'Soni', 'class': 'field-input quantity-input', 'min': '1', 'step': '1'}),
+        }
+
+
+class DetailForm(forms.ModelForm):
+    class Meta:
+        model = Detail
+        fields = ['name', 'price']
+        labels = {
+            'name': 'Detal nomi',
+            'price': 'Narxi',
+        }
+        widgets = {
+            'name': forms.TextInput(attrs={'placeholder': 'Detal nomi', 'class': 'field-input'}),
+            'price': forms.NumberInput(attrs={'placeholder': 'Narxi', 'class': 'field-input', 'step': '1', 'min': '0', 'inputmode': 'numeric', 'pattern': '[0-9]*'}),
         }
 
 

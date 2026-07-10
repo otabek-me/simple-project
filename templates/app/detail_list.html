@@ -1,0 +1,51 @@
+{% extends 'app/base.html' %}
+{% block title %}Detallar{% endblock %}
+{% block content %}
+    <section class="panel form-panel">
+        <h2>Detallar</h2>
+        <form method="get" class="search-form" style="margin-bottom: 20px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <input type="search" name="q" value="{{ query }}" placeholder="Detal qidirish..." class="field-input" style="flex: 1; min-width: 220px;">
+            <button type="submit" class="button button-secondary">Qidirish</button>
+            <a class="button button-primary" href="{% url 'detail_list' %}">Hammasini ko‘rsatish</a>
+        </form>
+
+        <form method="post" class="detail-add-form" style="margin-bottom: 32px;">
+            {% csrf_token %}
+            <h3>Yangi detal qo‘shish</h3>
+            {{ form.non_field_errors }}
+            <div class="grid-2">
+                <div class="form-group">
+                    {{ form.name.label_tag }}
+                    {{ form.name }}
+                    {{ form.name.errors }}
+                </div>
+                <div class="form-group">
+                    {{ form.price.label_tag }}
+                    {{ form.price }}
+                    {{ form.price.errors }}
+                </div>
+            </div>
+            <button type="submit" class="button button-primary full-width">Saqlash</button>
+        </form>
+
+        {% if details %}
+            <div class="card-grid">
+                {% for detail in details %}
+                    <article class="card">
+                        <div class="card-title">{{ detail.name }}</div>
+                        <div class="card-meta">Narxi: <strong>{{ detail.price }}</strong></div>
+                        <div class="card-actions" style="margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
+                            <a class="button button-secondary" href="{% url 'detail_edit' detail.pk %}">Tahrirlash</a>
+                            <form method="post" action="{% url 'detail_delete' detail.pk %}" onsubmit="return confirm('Siz rostdan ham bu detallarni oʻchirmoqchimisiz?');" style="display: inline-block;">
+                                {% csrf_token %}
+                                <button class="button button-danger" type="submit">O'chirish</button>
+                            </form>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="notice">Hech qanday detal topilmadi. Iltimos, yangi detal qo‘shing.</p>
+        {% endif %}
+    </section>
+{% endblock %}

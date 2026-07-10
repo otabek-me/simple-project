@@ -4,6 +4,22 @@ from decimal import Decimal
 
 PRICE_QUANTIZE = Decimal('1')
 
+
+class Detail(models.Model):
+    name = models.CharField(max_length=120)
+    price = models.DecimalField(
+        max_digits=20,
+        decimal_places=0,
+        validators=[MinValueValidator(0)],
+    )
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.name} — {self.price}"
+
+
 class Furniture(models.Model):
     name = models.CharField(max_length=120)
     craft_fee_rate = models.DecimalField(
@@ -88,19 +104,39 @@ class FurnitureDetail(models.Model):
         related_name='details',
         on_delete=models.CASCADE,
     )
-    name = models.CharField(max_length=120)
-    price = models.DecimalField(
-        max_digits=20,
-        decimal_places=0,
-        validators=[MinValueValidator(0)],
+    detail = models.ForeignKey(
+        Detail,
+        related_name='furniture_items',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+    )
+    name = models.CharField(
+        max_length=120,
+        blank=True,
+        null=True,
     )
     quantity = models.PositiveIntegerField(
         default=1,
         validators=[MinValueValidator(1)],
     )
+    price = models.DecimalField(
+        max_digits=20,
+        decimal_places=0,
+        validators=[MinValueValidator(0)],
+        editable=False,
+    )
 
     class Meta:
-        ordering = ['name']
+        ordering = ['detail__name']
 
     def __str__(self):
-        return f"{self.name} · {self.price} * {self.quantity}"
+        name = self.detail.name if self.detail else self.name or 'Detal'
+        return f"{name} · {self.price} * {self.quantity}"
+
+    def save(self, *args, **kwargs):
+        if self.detail_id:
+            self.price = self.detail.price
+            if not self.name:
+                self.name = self.detail.name
+        super().save(*args, **kwargs)

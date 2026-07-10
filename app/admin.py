@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Furniture, FurnitureDetail
+from .models import Detail, Furniture, FurnitureDetail
 
 
 class FurnitureDetailInline(admin.TabularInline):
@@ -17,5 +17,11 @@ class FurnitureAdmin(admin.ModelAdmin):
 
 @admin.register(FurnitureDetail)
 class FurnitureDetailAdmin(admin.ModelAdmin):
-    list_display = ('name', 'furniture', 'price', 'quantity')
+    list_display = ('detail', 'furniture', 'price', 'quantity')
+    search_fields = ('detail__name',)
+
+
+@admin.register(Detail)
+class DetailAdmin(admin.ModelAdmin):
+    list_display = ('name', 'price')
     search_fields = ('name',)

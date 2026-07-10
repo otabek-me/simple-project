@@ -1,0 +1,24 @@
+{% extends 'app/base.html' %}
+{% block title %}Detalni tahrirlash{% endblock %}
+{% block content %}
+    <section class="panel form-panel">
+        <h2>Detalni tahrirlash</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <div class="grid-2">
+                <div class="form-group">
+                    {{ form.name.label_tag }}
+                    {{ form.name }}
+                    {{ form.name.errors }}
+                </div>
+                <div class="form-group">
+                    {{ form.price.label_tag }}
+                    {{ form.price }}
+                    {{ form.price.errors }}
+                </div>
+            </div>
+            <button type="submit" class="button button-primary full-width">Saqlash</button>
+        </form>
+    </section>
+{% endblock %}
