@@ -21,6 +21,22 @@ class FurnitureEditTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn('/accounts/login/', response['Location'])
 
+    def test_login_page_supports_password_change(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('login'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Parolni almashtirish')
+
+        response = self.client.post(reverse('login'), {
+            'old_password': 'password',
+            'new_password1': 'NewStrong123!',
+            'new_password2': 'NewStrong123!',
+            'password_submit': '1',
+        })
+        self.assertEqual(response.status_code, 302)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('NewStrong123!'))
+
     def test_edit_page_renders_hidden_formset_ids(self):
         response = self.client.get(reverse('furniture_edit', args=[self.furniture.pk]))
 

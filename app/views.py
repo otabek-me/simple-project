@@ -1,4 +1,7 @@
+from django.contrib import messages
+from django.contrib.auth import login, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.forms import inlineformset_factory
@@ -14,6 +17,41 @@ DetailFormSet = inlineformset_factory(
     extra=1,
     can_delete=True,
 )
+
+
+def auth_page(request):
+    if request.method == 'POST' and 'login_submit' in request.POST:
+        login_form = AuthenticationForm(request, data=request.POST)
+        if login_form.is_valid():
+            login(request, login_form.get_user())
+            return redirect(reverse('furniture_list'))
+    else:
+        login_form = AuthenticationForm(request)
+
+    password_form = None
+    if request.user.is_authenticated:
+        if request.method == 'POST' and 'password_submit' in request.POST:
+            password_form = PasswordChangeForm(request.user, data=request.POST)
+            if password_form.is_valid():
+                password_form.save()
+                update_session_auth_hash(request, password_form.user)
+                messages.success(request, 'Parol muvaffaqiyatli o\'zgartirildi.')
+                return redirect(reverse('login'))
+        else:
+            password_form = PasswordChangeForm(request.user)
+
+    login_form.fields['username'].widget.attrs.update({'class': 'field-input', 'placeholder': 'Foydalanuvchi nomi'})
+    login_form.fields['password'].widget.attrs.update({'class': 'field-input', 'placeholder': 'Parol'})
+
+    if password_form is not None:
+        password_form.fields['old_password'].widget.attrs.update({'class': 'field-input', 'placeholder': 'Eski parol'})
+        password_form.fields['new_password1'].widget.attrs.update({'class': 'field-input', 'placeholder': 'Yangi parol'})
+        password_form.fields['new_password2'].widget.attrs.update({'class': 'field-input', 'placeholder': 'Yangi parolni takrorlang'})
+
+    return render(request, 'registration/login.html', {
+        'login_form': login_form,
+        'password_form': password_form,
+    })
 
 
 @login_required
