@@ -19,6 +19,7 @@
                 <a class="navbar-link" href="{% url 'detail_list' %}">🧩 Detallar</a>
                 <a class="button button-primary" href="{% url 'furniture_create' %}">➕ Yangi mebel</a>
                 {% if user.is_authenticated %}
+                    <a class="navbar-link" href="{% url 'login' %}">Parolni o‘zgartirish</a>
                     <form method="post" action="{% url 'logout' %}" style="display: inline;">
                         {% csrf_token %}
                         <button type="submit" class="navbar-link" style="background: transparent; border: none; cursor: pointer; padding: 8px 14px;">Chiqish</button>
