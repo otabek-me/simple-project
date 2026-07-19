@@ -107,7 +107,7 @@ class FurnitureDetail(models.Model):
     detail = models.ForeignKey(
         Detail,
         related_name='furniture_items',
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
     )
