@@ -51,10 +51,6 @@
             }
         }
 
-        function formatNumber(num) {
-            return Number(num).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-        }
-
         window.addEventListener('DOMContentLoaded', function() {
             // Auto-dismiss messages after 8 seconds
             document.querySelectorAll('.message').forEach(function(msg) {
@@ -66,63 +62,6 @@
             // Scroll to first error if any
             scrollToFirstError();
 
-            // Format preview numbers in furniture form (not format-price elements - those are already formatted by Django filter)
-            function updateSummary() {
-                if (!document.querySelector('#id_craft_fee_rate')) return;
-                const rows = document.querySelectorAll('.detail-row');
-                let material = 0;
-                rows.forEach(function(row) {
-                    const deleteCheckbox = row.querySelector('input[type="checkbox"][name*="-DELETE"]');
-                    if (deleteCheckbox && deleteCheckbox.checked) return;
-                    const select = row.querySelector('.detail-select');
-                    const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
-                    let price = 0;
-                    if (select && select.selectedIndex >= 0) {
-                        const selectedOption = select.options[select.selectedIndex];
-                        const priceText = selectedOption.text.split('—').pop().trim().replace(/\s/g, '');
-                        price = parseFloat(priceText) || 0;
-                    }
-                    material += price * quantity;
-                });
-                const craftRate = parseFloat(document.querySelector('#id_craft_fee_rate').value) || 0;
-                const masterRate = parseFloat(document.querySelector('#id_master_fee_rate').value) || 0;
-                const ownerRate = parseFloat(document.querySelector('#id_owner_fee_rate').value) || 0;
-                const craftAmount = material * craftRate / 100;
-                const subtotal1 = material + craftAmount;
-                const masterAmount = subtotal1 * masterRate / 100;
-                const subtotal2 = subtotal1 + masterAmount;
-                const ownerAmount = subtotal2 * ownerRate / 100;
-                const total = subtotal2 + ownerAmount;
-                document.querySelector('#preview-material').textContent = formatNumber(material);
-                document.querySelector('#preview-craft').textContent = formatNumber(craftAmount);
-                document.querySelector('#preview-master').textContent = formatNumber(masterAmount);
-                document.querySelector('#preview-owner').textContent = formatNumber(ownerAmount);
-                document.querySelector('#preview-total').textContent = formatNumber(total);
-            }
-
-            const fieldSelectors = ['#id_craft_fee_rate', '#id_master_fee_rate', '#id_owner_fee_rate'];
-            fieldSelectors.forEach(function(selector) {
-                const element = document.querySelector(selector);
-                if (element) {
-                    element.addEventListener('input', updateSummary);
-                }
-            });
-            document.body.addEventListener('input', function(event) {
-                if (event.target.matches('.price-input, .quantity-input')) {
-                    updateSummary();
-                }
-            });
-            document.body.addEventListener('change', function(event) {
-                if (event.target.matches('input[type="checkbox"][name*="-DELETE"]')) {
-                    const row = event.target.closest('.detail-row');
-                    if (event.target.checked) {
-                        row.style.display = 'none';
-                    } else {
-                        row.style.display = 'block';
-                    }
-                    updateSummary();
-                }
-            });
             // Handle delete label clicks for instant deletion
             const setupDeleteLabels = function() {
                 document.querySelectorAll('.delete-row label').forEach(function(label) {
@@ -140,6 +79,7 @@
                 });
             };
             setupDeleteLabels();
+
             const addRow = document.querySelector('#add-detail-row');
             if (addRow) {
                 addRow.addEventListener('click', function(event) {
@@ -151,10 +91,8 @@
                     detailContainer.insertAdjacentHTML('beforeend', emptyRow);
                     totalForms.value = formIndex + 1;
                     setupDeleteLabels();
-                    updateSummary();
                 });
             }
-            updateSummary();
         });
     </script>
 </body>

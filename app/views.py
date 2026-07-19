@@ -106,6 +106,7 @@ def furniture_create(request):
         'formset': formset,
         'detail_options': details_queryset,
         'page_title': 'Yangi mebel qo‘shish',
+        'furniture': furniture,
     })
 
 
