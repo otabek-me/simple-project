@@ -1,15 +1,15 @@
 from django.db import models
 from django.core.validators import MinValueValidator
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
-PRICE_QUANTIZE = Decimal('1')
+PRICE_QUANTIZE = Decimal('0.01')
 
 
 class Detail(models.Model):
     name = models.CharField(max_length=120)
     price = models.DecimalField(
         max_digits=20,
-        decimal_places=0,
+        decimal_places=2,
         validators=[MinValueValidator(0)],
     )
 
@@ -28,7 +28,6 @@ class Detail(models.Model):
                 pass
         super().save(*args, **kwargs)
         if old_price is not None and old_price != self.price:
-            # Narx o'zgardi - barcha FurnitureDetail larni yangilab, Furniture larni recalculate qilish
             affected_furniture_ids = set()
             for fd in FurnitureDetail.objects.filter(detail=self):
                 fd.price = self.price
@@ -46,49 +45,49 @@ class Furniture(models.Model):
     name = models.CharField(max_length=120)
     craft_fee_rate = models.DecimalField(
         max_digits=8,
-        decimal_places=0,
+        decimal_places=2,
         default=2,
         validators=[MinValueValidator(0)],
     )
     master_fee_rate = models.DecimalField(
         max_digits=8,
-        decimal_places=0,
+        decimal_places=2,
         default=5,
         validators=[MinValueValidator(0)],
     )
     owner_fee_rate = models.DecimalField(
         max_digits=8,
-        decimal_places=0,
+        decimal_places=2,
         default=10,
         validators=[MinValueValidator(0)],
     )
     material_total = models.DecimalField(
         max_digits=20,
-        decimal_places=0,
+        decimal_places=2,
         default=0,
         editable=False,
     )
     craft_fee_amount = models.DecimalField(
         max_digits=20,
-        decimal_places=0,
+        decimal_places=2,
         default=0,
         editable=False,
     )
     master_fee_amount = models.DecimalField(
         max_digits=20,
-        decimal_places=0,
+        decimal_places=2,
         default=0,
         editable=False,
     )
     owner_fee_amount = models.DecimalField(
         max_digits=20,
-        decimal_places=0,
+        decimal_places=2,
         default=0,
         editable=False,
     )
     total_price = models.DecimalField(
         max_digits=20,
-        decimal_places=0,
+        decimal_places=2,
         default=0,
         editable=False,
     )
@@ -106,14 +105,14 @@ class Furniture(models.Model):
             (detail.price * detail.quantity for detail in self.details.all()),
             Decimal('0.00'),
         )
-        craft_amount = (base * self.craft_fee_rate / Decimal('100')).quantize(PRICE_QUANTIZE)
-        subtotal = (base + craft_amount).quantize(PRICE_QUANTIZE)
-        master_amount = (subtotal * self.master_fee_rate / Decimal('100')).quantize(PRICE_QUANTIZE)
-        subtotal = (subtotal + master_amount).quantize(PRICE_QUANTIZE)
-        owner_amount = (subtotal * self.owner_fee_rate / Decimal('100')).quantize(PRICE_QUANTIZE)
-        total = (subtotal + owner_amount).quantize(PRICE_QUANTIZE)
+        craft_amount = (base * self.craft_fee_rate / Decimal('100')).quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
+        subtotal = (base + craft_amount).quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
+        master_amount = (subtotal * self.master_fee_rate / Decimal('100')).quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
+        subtotal = (subtotal + master_amount).quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
+        owner_amount = (subtotal * self.owner_fee_rate / Decimal('100')).quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
+        total = (subtotal + owner_amount).quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
 
-        self.material_total = base.quantize(PRICE_QUANTIZE)
+        self.material_total = base.quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
         self.craft_fee_amount = craft_amount
         self.master_fee_amount = master_amount
         self.owner_fee_amount = owner_amount
@@ -146,7 +145,7 @@ class FurnitureDetail(models.Model):
     )
     price = models.DecimalField(
         max_digits=20,
-        decimal_places=0,
+        decimal_places=2,
         validators=[MinValueValidator(0)],
         editable=False,
     )
