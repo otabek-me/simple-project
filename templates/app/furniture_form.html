@@ -95,11 +95,11 @@
             </div>
             <section class="summary-card">
                 <h3>Hisoblab ko‘rish</h3>
-                <div class="summary-row"><span>Material yig‘indisi</span><strong id="preview-material">0.00</strong></div>
-                <div class="summary-row"><span>1-bosqich: <span id="preview-craft-rate">{{ form.craft_fee_rate.value|default:form.instance.craft_fee_rate|default:'2.00' }}</span>% ustama</span><strong id="preview-craft">0.00</strong></div>
-                <div class="summary-row"><span>2-bosqich: <span id="preview-master-rate">{{ form.master_fee_rate.value|default:form.instance.master_fee_rate|default:'5.00' }}</span>% ustama</span><strong id="preview-master">0.00</strong></div>
-                <div class="summary-row"><span>3-bosqich: <span id="preview-owner-rate">{{ form.owner_fee_rate.value|default:form.instance.owner_fee_rate|default:'10.00' }}</span>% foyda</span><strong id="preview-owner">0.00</strong></div>
-                <div class="summary-row total-row"><span>Jami narx</span><strong id="preview-total">0.00</strong></div>
+                <div class="summary-row"><span>Material yig‘indisi</span><strong>{{ furniture.material_total|default:0|format_price }}</strong></div>
+                <div class="summary-row"><span>1-bosqich: {{ form.craft_fee_rate.value|default:form.instance.craft_fee_rate|default:'2.00' }}% ustama</span><strong>{{ furniture.craft_fee_amount|default:0|format_price }}</strong></div>
+                <div class="summary-row"><span>2-bosqich: {{ form.master_fee_rate.value|default:form.instance.master_fee_rate|default:'5.00' }}% ustama</span><strong>{{ furniture.master_fee_amount|default:0|format_price }}</strong></div>
+                <div class="summary-row"><span>3-bosqich: {{ form.owner_fee_rate.value|default:form.instance.owner_fee_rate|default:'10.00' }}% foyda</span><strong>{{ furniture.owner_fee_amount|default:0|format_price }}</strong></div>
+                <div class="summary-row total-row"><span>Jami narx</span><strong>{{ furniture.total_price|default:0|format_price }}</strong></div>
             </section>
             <button type="submit" class="button button-primary full-width">Saqlash</button>
         </form>
