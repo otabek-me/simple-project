@@ -46,7 +46,7 @@
                             {% if formset.can_delete %}
                                 <div class="delete-row">
                                     {{ form.DELETE }}
-                                    <label class="delete-label" for="{{ form.DELETE.id_for_label }}">🗑️ O'chirish</label>
+                                    <button type="button" class="button button-danger delete-detail-btn" data-for="{{ form.DELETE.id_for_label }}">🗑️ O'chirish</button>
                                 </div>
                             {% endif %}
                         </div>
@@ -70,8 +70,8 @@
                             </div>
                         </div>
                         <div class="delete-row">
-                            <input type="checkbox" name="details-__prefix__-DELETE" id="id_details-__prefix__-DELETE">
-                            <label class="delete-label" for="id_details-__prefix__-DELETE">🗑️ O'chirish</label>
+                            <input type="checkbox" name="details-__prefix__-DELETE" id="id_details-__prefix__-DELETE" style="display:none;">
+                            <button type="button" class="button button-danger delete-detail-btn" data-for="id_details-__prefix__-DELETE">🗑️ O'chirish</button>
                         </div>
                     </div>
                 </template>

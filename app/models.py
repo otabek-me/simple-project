@@ -19,6 +19,28 @@ class Detail(models.Model):
     def __str__(self):
         return f"{self.name} — {self.price}"
 
+    def save(self, *args, **kwargs):
+        old_price = None
+        if self.pk:
+            try:
+                old_price = Detail.objects.get(pk=self.pk).price
+            except Detail.DoesNotExist:
+                pass
+        super().save(*args, **kwargs)
+        if old_price is not None and old_price != self.price:
+            # Narx o'zgardi - barcha FurnitureDetail larni yangilab, Furniture larni recalculate qilish
+            affected_furniture_ids = set()
+            for fd in FurnitureDetail.objects.filter(detail=self):
+                fd.price = self.price
+                fd.save(update_fields=['price'])
+                affected_furniture_ids.add(fd.furniture_id)
+            for fid in affected_furniture_ids:
+                try:
+                    f = Furniture.objects.get(pk=fid)
+                    f.recalculate().save()
+                except Furniture.DoesNotExist:
+                    pass
+
 
 class Furniture(models.Model):
     name = models.CharField(max_length=120)

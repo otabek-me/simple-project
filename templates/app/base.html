@@ -62,23 +62,25 @@
             // Scroll to first error if any
             scrollToFirstError();
 
-            // Handle delete label clicks for instant deletion
-            const setupDeleteLabels = function() {
-                document.querySelectorAll('.delete-row label').forEach(function(label) {
-                    if (label.dataset.setupDone) return;
-                    label.dataset.setupDone = 'true';
-                    label.addEventListener('click', function(e) {
+            // Handle delete detail buttons - toggles hidden checkbox and hides row
+            const setupDeleteButtons = function() {
+                document.querySelectorAll('.delete-detail-btn').forEach(function(btn) {
+                    if (btn.dataset.setupDone) return;
+                    btn.dataset.setupDone = 'true';
+                    btn.addEventListener('click', function(e) {
                         e.preventDefault();
-                        const checkbox = document.getElementById(label.getAttribute('for'));
+                        const checkbox = document.getElementById(btn.getAttribute('data-for'));
                         if (checkbox && checkbox.type === 'checkbox') {
-                            checkbox.checked = !checkbox.checked;
-                            const changeEvent = new Event('change', { bubbles: true });
-                            checkbox.dispatchEvent(changeEvent);
+                            checkbox.checked = true;
+                            const row = btn.closest('.detail-row');
+                            if (row) {
+                                row.style.display = 'none';
+                            }
                         }
                     });
                 });
             };
-            setupDeleteLabels();
+            setupDeleteButtons();
 
             const addRow = document.querySelector('#add-detail-row');
             if (addRow) {
@@ -90,7 +92,7 @@
                     const emptyRow = document.querySelector('#empty-form').innerHTML.replace(/__prefix__/g, formIndex);
                     detailContainer.insertAdjacentHTML('beforeend', emptyRow);
                     totalForms.value = formIndex + 1;
-                    setupDeleteLabels();
+                    setupDeleteButtons();
                 });
             }
         });
