@@ -28,6 +28,7 @@ class Detail(models.Model):
                 pass
         super().save(*args, **kwargs)
         if old_price is not None and old_price != self.price:
+            # Narx o'zgardi - barcha bog'liq FurnitureDetail va Furniture larni yangilash
             affected_furniture_ids = set()
             for fd in FurnitureDetail.objects.filter(detail=self):
                 fd.price = self.price
@@ -101,23 +102,23 @@ class Furniture(models.Model):
         return self.name
 
     def recalculate(self):
+        # FurnitureDetail.price dan foydalanish (Detail.price emas)
         base = sum(
-            (detail.price * detail.quantity for detail in self.details.all()),
+            (fd.price * fd.quantity for fd in self.details.all()),
             Decimal('0.00'),
         )
-        # Hech qanday oraliq yaxlitlashsiz, faqat yakuniy natijani 2 xonaga yaxlitlash
-        craft_amount = base * self.craft_fee_rate / Decimal('100')
-        subtotal = base + craft_amount
-        master_amount = subtotal * self.master_fee_rate / Decimal('100')
-        subtotal = subtotal + master_amount
-        owner_amount = subtotal * self.owner_fee_rate / Decimal('100')
-        total = subtotal + owner_amount
+        craft_amount = (base * self.craft_fee_rate / Decimal('100')).quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
+        subtotal = (base + craft_amount).quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
+        master_amount = (subtotal * self.master_fee_rate / Decimal('100')).quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
+        subtotal = (subtotal + master_amount).quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
+        owner_amount = (subtotal * self.owner_fee_rate / Decimal('100')).quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
+        total = (subtotal + owner_amount).quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
 
         self.material_total = base.quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
-        self.craft_fee_amount = craft_amount.quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
-        self.master_fee_amount = master_amount.quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
-        self.owner_fee_amount = owner_amount.quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
-        self.total_price = total.quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
+        self.craft_fee_amount = craft_amount
+        self.master_fee_amount = master_amount
+        self.owner_fee_amount = owner_amount
+        self.total_price = total
         return self
 
 class FurnitureDetail(models.Model):
