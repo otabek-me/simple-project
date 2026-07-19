@@ -51,10 +51,6 @@
             }
         }
 
-        function fmt(n) {
-            return Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-        }
-
         window.addEventListener('DOMContentLoaded', function() {
             // Auto-dismiss messages after 8 seconds
             document.querySelectorAll('.message').forEach(function(msg) {
@@ -65,61 +61,6 @@
 
             // Scroll to first error if any
             scrollToFirstError();
-
-            // Live preview update (client-side only for preview, actual save uses backend)
-            function updatePreview() {
-                if (!document.querySelector('#id_craft_fee_rate')) return;
-                const rows = document.querySelectorAll('.detail-row');
-                let material = 0;
-                rows.forEach(function(row) {
-                    const deleteCheckbox = row.querySelector('input[type="checkbox"][name*="-DELETE"]');
-                    if (deleteCheckbox && deleteCheckbox.checked) return;
-                    const select = row.querySelector('.detail-select');
-                    const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
-                    let price = 0;
-                    if (select && select.selectedIndex > 0) {
-                        const txt = select.options[select.selectedIndex].text;
-                        const parts = txt.split('—');
-                        if (parts.length > 1) {
-                            price = parseFloat(parts[parts.length-1].trim().replace(/\s/g, '')) || 0;
-                        }
-                    }
-                    material += price * quantity;
-                });
-                const craftRate = parseFloat(document.querySelector('#id_craft_fee_rate').value) || 0;
-                const masterRate = parseFloat(document.querySelector('#id_master_fee_rate').value) || 0;
-                const ownerRate = parseFloat(document.querySelector('#id_owner_fee_rate').value) || 0;
-                const craftAmt = material * craftRate / 100;
-                const s1 = material + craftAmt;
-                const masterAmt = s1 * masterRate / 100;
-                const s2 = s1 + masterAmt;
-                const ownerAmt = s2 * ownerRate / 100;
-                const total = s2 + ownerAmt;
-                const el = function(id) { return document.querySelector(id); };
-                if (el('#preview-material')) el('#preview-material').textContent = fmt(material);
-                if (el('#preview-craft')) el('#preview-craft').textContent = fmt(craftAmt);
-                if (el('#preview-master')) el('#preview-master').textContent = fmt(masterAmt);
-                if (el('#preview-owner')) el('#preview-owner').textContent = fmt(ownerAmt);
-                if (el('#preview-total')) el('#preview-total').textContent = fmt(total);
-            }
-
-            // Attach events for preview update
-            const previewFields = ['#id_craft_fee_rate', '#id_master_fee_rate', '#id_owner_fee_rate'];
-            previewFields.forEach(function(sel) {
-                const el = document.querySelector(sel);
-                if (el) el.addEventListener('input', updatePreview);
-            });
-            document.body.addEventListener('input', function(e) {
-                if (e.target.matches('.quantity-input')) updatePreview();
-            });
-            document.body.addEventListener('change', function(e) {
-                if (e.target.matches('.detail-select')) updatePreview();
-                if (e.target.matches('input[type="checkbox"][name*="-DELETE"]')) {
-                    const row = e.target.closest('.detail-row');
-                    if (row) row.style.display = e.target.checked ? 'none' : 'block';
-                    updatePreview();
-                }
-            });
 
             // Handle delete detail buttons
             const setupDeleteButtons = function() {
@@ -133,7 +74,6 @@
                             checkbox.checked = true;
                             const row = btn.closest('.detail-row');
                             if (row) row.style.display = 'none';
-                            updatePreview();
                         }
                     });
                 });
@@ -151,12 +91,8 @@
                     detailContainer.insertAdjacentHTML('beforeend', emptyRow);
                     totalForms.value = formIndex + 1;
                     setupDeleteButtons();
-                    updatePreview();
                 });
             }
-
-            // Initial preview
-            updatePreview();
         });
     </script>
 </body>
