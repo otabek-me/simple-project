@@ -1,5 +1,5 @@
 from django import template
-from decimal import Decimal
+from decimal import Decimal, ROUND_DOWN
 
 register = template.Library()
 
@@ -11,13 +11,10 @@ def format_price(value):
         if isinstance(value, str):
             value = value.replace(' ', '')
         value = Decimal(str(value))
-        integer_part = int(value)
+        integer_part = int(value // 1)
         formatted = f"{integer_part:,}".replace(',', ' ')
-        decimal_part = value - int(value)
-        if decimal_part > 0:
-            formatted += f".{int(decimal_part * 100):02d}"
-        else:
-            formatted += '.00'
+        decimal_part = int((value % 1) * 100)
+        formatted += f".{decimal_part:02d}"
         return formatted
     except (ValueError, TypeError, Exception):
         return str(value)

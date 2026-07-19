@@ -1,4 +1,5 @@
 {% extends 'app/base.html' %}
+{% load price_filters %}
 {% block title %}Detallar{% endblock %}
 {% block content %}
     <section class="panel form-panel">
@@ -33,7 +34,7 @@
                 {% for detail in details %}
                     <article class="card">
                         <div class="card-title">{{ detail.name }}</div>
-                        <div class="card-meta">Narxi: <strong>{{ detail.price }}</strong></div>
+                        <div class="card-meta">Narxi: <strong>{{ detail.price|format_price }}</strong></div>
                         <div class="card-actions" style="margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
                             <a class="button button-secondary" href="{% url 'detail_edit' detail.pk %}">Tahrirlash</a>
                             <form method="post" action="{% url 'detail_delete' detail.pk %}" onsubmit="return confirm('Siz rostdan ham bu detallarni oʻchirmoqchimisiz?');" style="display: inline-block;">
