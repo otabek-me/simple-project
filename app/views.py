@@ -78,12 +78,12 @@ def furniture_create(request):
         if form.is_valid() and formset.is_valid():
             furniture = form.save(commit=False)
             furniture.save()
-            details = formset.save(commit=False)
-            for detail in details:
-                detail.furniture = furniture
-                detail.save()
-            for detail in formset.deleted_objects:
-                detail.delete()
+            instances = formset.save(commit=False)
+            for obj in formset.deleted_objects:
+                obj.delete()
+            for instance in instances:
+                instance.furniture = furniture
+                instance.save()
             furniture.recalculate().save()
             return redirect(reverse('furniture_list'))
         else:
@@ -123,12 +123,12 @@ def furniture_edit(request, pk):
         if form.is_valid() and formset.is_valid():
             furniture = form.save(commit=False)
             furniture.save()
-            details = formset.save(commit=False)
-            for detail in details:
-                detail.furniture = furniture
-                detail.save()
-            for detail in formset.deleted_objects:
-                detail.delete()
+            instances = formset.save(commit=False)
+            for obj in formset.deleted_objects:
+                obj.delete()
+            for instance in instances:
+                instance.furniture = furniture
+                instance.save()
             furniture.recalculate().save()
             return redirect(reverse('furniture_list'))
         else:

@@ -1,4 +1,5 @@
 {% extends 'app/base.html' %}
+{% load price_filters %}
 {% block title %}Mebel ro'yxati{% endblock %}
 {% block content %}
     <section class="panel">
@@ -13,11 +14,11 @@
                         <div class="card-title">{{ furniture.name }}</div>
                         <div class="card-meta">So'nggi yangilangan: {{ furniture.updated_at|date:'Y-m-d H:i' }}</div>
                         <dl class="price-list">
-                            <div><dt>Material narxi</dt><dd class="format-price">{{ furniture.material_total }}</dd></div>
-                            <div><dt>2% ustama</dt><dd class="format-price">{{ furniture.craft_fee_amount }}</dd></div>
-                            <div><dt>5% ustama</dt><dd class="format-price">{{ furniture.master_fee_amount }}</dd></div>
-                            <div><dt>10% ustama</dt><dd class="format-price">{{ furniture.owner_fee_amount }}</dd></div>
-                            <div class="price-total"><dt>Jami</dt><dd class="format-price">{{ furniture.total_price }}</dd></div>
+                            <div><dt>Material narxi</dt><dd class="format-price">{{ furniture.material_total|format_price }}</dd></div>
+                            <div><dt>{{ furniture.craft_fee_rate }}% ustama</dt><dd class="format-price">{{ furniture.craft_fee_amount|format_price }}</dd></div>
+                            <div><dt>{{ furniture.master_fee_rate }}% ustama</dt><dd class="format-price">{{ furniture.master_fee_amount|format_price }}</dd></div>
+                            <div><dt>{{ furniture.owner_fee_rate }}% ustama</dt><dd class="format-price">{{ furniture.owner_fee_amount|format_price }}</dd></div>
+                            <div class="price-total"><dt>Jami</dt><dd class="format-price">{{ furniture.total_price|format_price }}</dd></div>
                         </dl>
                         <div class="card-actions">
                             <a class="button button-secondary" href="{% url 'furniture_edit' furniture.pk %}">Tahrirlash</a>

@@ -37,16 +37,11 @@
         {% block content %}{% endblock %}
     </main>
     <script>
-        function formatNumber(num) {
-            return parseFloat(num).toLocaleString('uz-UZ', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        }
-
         function scrollToFirstError() {
             const firstError = document.querySelector('.has-error, .errorlist, .error');
             if (firstError) {
                 const target = firstError.closest('.form-group, .detail-row, .panel') || firstError;
                 target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                // Highlight the field
                 const input = target.querySelector('input, select, textarea');
                 if (input) {
                     input.focus();
@@ -54,6 +49,10 @@
                     input.style.outlineOffset = '2px';
                 }
             }
+        }
+
+        function formatNumber(num) {
+            return Number(num).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
         }
 
         window.addEventListener('DOMContentLoaded', function() {
@@ -64,14 +63,10 @@
                 }, 8000);
             });
 
-            // Format all price elements
-            document.querySelectorAll('.format-price').forEach(function(el) {
-                el.textContent = formatNumber(el.textContent);
-            });
-
             // Scroll to first error if any
             scrollToFirstError();
 
+            // Format preview numbers in furniture form (not format-price elements - those are already formatted by Django filter)
             function updateSummary() {
                 if (!document.querySelector('#id_craft_fee_rate')) return;
                 const rows = document.querySelectorAll('.detail-row');
@@ -84,8 +79,8 @@
                     let price = 0;
                     if (select && select.selectedIndex >= 0) {
                         const selectedOption = select.options[select.selectedIndex];
-                        const priceText = selectedOption.text.split('—').pop().trim();
-                        price = parseFloat(priceText.replace(/,/g, '')) || 0;
+                        const priceText = selectedOption.text.split('—').pop().trim().replace(/\s/g, '');
+                        price = parseFloat(priceText) || 0;
                     }
                     material += price * quantity;
                 });
@@ -130,12 +125,12 @@
             });
             // Handle delete label clicks for instant deletion
             const setupDeleteLabels = function() {
-                document.querySelectorAll('.delete-label').forEach(function(label) {
+                document.querySelectorAll('.delete-row label').forEach(function(label) {
                     if (label.dataset.setupDone) return;
                     label.dataset.setupDone = 'true';
                     label.addEventListener('click', function(e) {
                         e.preventDefault();
-                        const checkbox = label.previousElementSibling;
+                        const checkbox = document.getElementById(label.getAttribute('for'));
                         if (checkbox && checkbox.type === 'checkbox') {
                             checkbox.checked = !checkbox.checked;
                             const changeEvent = new Event('change', { bubbles: true });
@@ -155,7 +150,7 @@
                     const emptyRow = document.querySelector('#empty-form').innerHTML.replace(/__prefix__/g, formIndex);
                     detailContainer.insertAdjacentHTML('beforeend', emptyRow);
                     totalForms.value = formIndex + 1;
-                    setupDeleteLabels(); // Setup delete labels for new row
+                    setupDeleteLabels();
                     updateSummary();
                 });
             }

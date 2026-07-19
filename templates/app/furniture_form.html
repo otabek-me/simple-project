@@ -11,23 +11,6 @@
                 {{ form.name }}
                 {{ form.name.errors }}
             </div>
-            <div class="grid-2">
-                <div class="form-group">
-                    {{ form.craft_fee_rate.label_tag }}
-                    {{ form.craft_fee_rate }}
-                    {{ form.craft_fee_rate.errors }}
-                </div>
-                <div class="form-group">
-                    {{ form.master_fee_rate.label_tag }}
-                    {{ form.master_fee_rate }}
-                    {{ form.master_fee_rate.errors }}
-                </div>
-                <div class="form-group">
-                    {{ form.owner_fee_rate.label_tag }}
-                    {{ form.owner_fee_rate }}
-                    {{ form.owner_fee_rate.errors }}
-                </div>
-            </div>
             <div class="detail-section">
                 <div class="section-header">
                     <h3>Mebel uchun detallar</h3>
@@ -92,12 +75,29 @@
                     </div>
                 </template>
             </div>
+            <div class="grid-2">
+                <div class="form-group">
+                    {{ form.craft_fee_rate.label_tag }}
+                    {{ form.craft_fee_rate }}
+                    {{ form.craft_fee_rate.errors }}
+                </div>
+                <div class="form-group">
+                    {{ form.master_fee_rate.label_tag }}
+                    {{ form.master_fee_rate }}
+                    {{ form.master_fee_rate.errors }}
+                </div>
+                <div class="form-group">
+                    {{ form.owner_fee_rate.label_tag }}
+                    {{ form.owner_fee_rate }}
+                    {{ form.owner_fee_rate.errors }}
+                </div>
+            </div>
             <section class="summary-card">
                 <h3>Hisoblab ko‘rish</h3>
                 <div class="summary-row"><span>Material yig‘indisi</span><strong id="preview-material">0.00</strong></div>
-                <div class="summary-row"><span>1-bosqich: {{ form.craft_fee_rate.value|default:'2' }}% ustama</span><strong id="preview-craft">0.00</strong></div>
-                <div class="summary-row"><span>2-bosqich: {{ form.master_fee_rate.value|default:'5' }}% ustama</span><strong id="preview-master">0.00</strong></div>
-                <div class="summary-row"><span>3-bosqich: {{ form.owner_fee_rate.value|default:'10' }}% foyda</span><strong id="preview-owner">0.00</strong></div>
+                <div class="summary-row"><span>1-bosqich: <span id="preview-craft-rate">{{ form.craft_fee_rate.value|default:'2' }}</span>% ustama</span><strong id="preview-craft">0.00</strong></div>
+                <div class="summary-row"><span>2-bosqich: <span id="preview-master-rate">{{ form.master_fee_rate.value|default:'5' }}</span>% ustama</span><strong id="preview-master">0.00</strong></div>
+                <div class="summary-row"><span>3-bosqich: <span id="preview-owner-rate">{{ form.owner_fee_rate.value|default:'10' }}</span>% foyda</span><strong id="preview-owner">0.00</strong></div>
                 <div class="summary-row total-row"><span>Jami narx</span><strong id="preview-total">0.00</strong></div>
             </section>
             <button type="submit" class="button button-primary full-width">Saqlash</button>
