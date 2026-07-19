@@ -1,9 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator
-from decimal import Decimal, ROUND_HALF_UP
-
-PRICE_QUANTIZE = Decimal('0.01')
-
+from decimal import Decimal
 
 class Detail(models.Model):
     name = models.CharField(max_length=120)
@@ -28,7 +25,6 @@ class Detail(models.Model):
                 pass
         super().save(*args, **kwargs)
         if old_price is not None and old_price != self.price:
-            # Narx o'zgardi - barcha bog'liq FurnitureDetail va Furniture larni yangilash
             affected_furniture_ids = set()
             for fd in FurnitureDetail.objects.filter(detail=self):
                 fd.price = self.price
@@ -102,19 +98,19 @@ class Furniture(models.Model):
         return self.name
 
     def recalculate(self):
-        # FurnitureDetail.price dan foydalanish (Detail.price emas)
+        # Hech qanday yaxlitlashsiz, o'z qiymati bilan hisoblash
         base = sum(
             (fd.price * fd.quantity for fd in self.details.all()),
             Decimal('0.00'),
         )
-        craft_amount = (base * self.craft_fee_rate / Decimal('100')).quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
-        subtotal = (base + craft_amount).quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
-        master_amount = (subtotal * self.master_fee_rate / Decimal('100')).quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
-        subtotal = (subtotal + master_amount).quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
-        owner_amount = (subtotal * self.owner_fee_rate / Decimal('100')).quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
-        total = (subtotal + owner_amount).quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
+        craft_amount = base * self.craft_fee_rate / Decimal('100')
+        subtotal = base + craft_amount
+        master_amount = subtotal * self.master_fee_rate / Decimal('100')
+        subtotal = subtotal + master_amount
+        owner_amount = subtotal * self.owner_fee_rate / Decimal('100')
+        total = subtotal + owner_amount
 
-        self.material_total = base.quantize(PRICE_QUANTIZE, rounding=ROUND_HALF_UP)
+        self.material_total = base
         self.craft_fee_amount = craft_amount
         self.master_fee_amount = master_amount
         self.owner_fee_amount = owner_amount
