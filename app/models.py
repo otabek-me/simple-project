@@ -103,12 +103,37 @@ class Furniture(models.Model):
     def __str__(self):
         return self.name
 
+    def sync_detail_prices(self):
+        """Har bir qatordagi narxni joriy Detail narxiga sinxronlaydi.
+
+        Forma/ro'yxatda ko'rinadigan detal narxi bilan material yig'indisi
+        o'rtasida farq chiqmasligi uchun hisobdan oldin chaqiriladi.
+        """
+        to_update = []
+        for fd in self.details.select_related('detail').all():
+            if not fd.detail_id or fd.detail is None:
+                continue
+            new_price = fd.detail.price
+            new_name = fd.detail.name
+            if fd.price != new_price or fd.name != new_name:
+                fd.price = new_price
+                fd.name = new_name
+                to_update.append(fd)
+        if to_update:
+            FurnitureDetail.objects.bulk_update(to_update, ['price', 'name'])
+        return self
+
     def recalculate(self):
-        # Hech qanday yaxlitlashsiz, o'z qiymati bilan hisoblash
-        base = sum(
-            (fd.price * fd.quantity for fd in self.details.all()),
-            Decimal('0.00'),
-        )
+        # Avval snapshot narxlarni joriy Detail narxlari bilan moslashtiramiz.
+        # Aks holda forma dropdownida yangi narx ko'rinadi, material_total esa
+        # eski FurnitureDetail.price bo'yicha qolib, farq chiqadi (masalan 2100).
+        self.sync_detail_prices()
+
+        base = Decimal('0.00')
+        for fd in self.details.select_related('detail').all():
+            unit_price = fd.detail.price if fd.detail_id and fd.detail is not None else fd.price
+            base += unit_price * fd.quantity
+
         craft_amount = base * self.craft_fee_rate / Decimal('100')
         subtotal = base + craft_amount
         master_amount = subtotal * self.master_fee_rate / Decimal('100')
@@ -127,6 +152,7 @@ class Furniture(models.Model):
         self.owner_fee_amount = to_money(owner_amount)
         self.total_price = to_money(total)
         return self
+
 
 class FurnitureDetail(models.Model):
     furniture = models.ForeignKey(
@@ -168,7 +194,11 @@ class FurnitureDetail(models.Model):
 
     def save(self, *args, **kwargs):
         if self.detail_id:
-            self.price = self.detail.price
-            if not self.name:
-                self.name = self.detail.name
+            # Har doim joriy Detail dan oling — eski snapshot qolmasin
+            detail = self.detail
+            if detail is not None:
+                self.price = detail.price
+                self.name = detail.name
         super().save(*args, **kwargs)
+
+

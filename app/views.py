@@ -62,10 +62,25 @@ def auth_page(request):
 
 @login_required
 def furniture_list(request):
-    furnitures = Furniture.objects.prefetch_related('details__detail')
+    furnitures = list(Furniture.objects.prefetch_related('details__detail'))
+    # Ro'yxatda ham joriy detal narxlari bilan mos summa ko'rinsin
+    dirty_fields = (
+        'material_total',
+        'craft_fee_amount',
+        'master_fee_amount',
+        'owner_fee_amount',
+        'total_price',
+    )
+    for furniture in furnitures:
+        before = {field: getattr(furniture, field) for field in dirty_fields}
+        furniture.recalculate()
+        if any(getattr(furniture, field) != before[field] for field in dirty_fields):
+            furniture.save()
     return render(request, 'app/furniture_list.html', {
         'furnitures': furnitures,
     })
+
+
 
 
 @login_required
@@ -112,9 +127,26 @@ def furniture_create(request):
 
 @login_required
 def furniture_edit(request, pk):
-    furniture = get_object_or_404(Furniture, pk=pk)
+    furniture = get_object_or_404(
+        Furniture.objects.prefetch_related('details__detail'),
+        pk=pk,
+    )
+    # Forma ochilganda ham joriy detal narxlari bilan mos summa ko'rinsin
+    dirty_fields = (
+        'material_total',
+        'craft_fee_amount',
+        'master_fee_amount',
+        'owner_fee_amount',
+        'total_price',
+    )
+    before = {field: getattr(furniture, field) for field in dirty_fields}
+    furniture.recalculate()
+    if any(getattr(furniture, field) != before[field] for field in dirty_fields):
+        furniture.save()
+
     details_queryset = Detail.objects.all()
     if request.method == 'POST':
+
         form = FurnitureForm(request.POST, instance=furniture)
         formset = DetailFormSet(request.POST, instance=furniture, prefix='details')
         if form.is_valid() and formset.is_valid():

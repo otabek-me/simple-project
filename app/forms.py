@@ -106,6 +106,16 @@ class FurnitureForm(forms.ModelForm):
         )
 
 
+class DetailSelect(forms.Select):
+    """Har bir option ga data-price qo'shadi — JS hisob matn parse qilmasin."""
+
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex=subindex, attrs=attrs)
+        if value and hasattr(value, 'instance') and value.instance is not None:
+            option['attrs']['data-price'] = str(value.instance.price)
+        return option
+
+
 class DetailChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return f"{obj.name} — {obj.price}"
@@ -116,12 +126,13 @@ class FurnitureDetailForm(forms.ModelForm):
         queryset=Detail.objects.all(),
         label='Detal',
         empty_label='- Detal tanlang -',
-        widget=forms.Select(attrs={'class': 'field-input detail-select'}),
+        widget=DetailSelect(attrs={'class': 'field-input detail-select'}),
         error_messages={
             'required': 'Detalni tanlang.',
             'invalid_choice': 'Noto‘g‘ri detal tanlandi.',
         },
     )
+
 
     class Meta:
         model = FurnitureDetail

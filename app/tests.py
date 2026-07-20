@@ -113,3 +113,99 @@ class FurnitureEditTests(TestCase):
         })
         self.assertFalse(detail_form.is_valid())
         self.assertIn('price', detail_form.errors)
+
+
+class MaterialTotalSyncTests(TestCase):
+    """Material yig'indisi forma/dropdowndagi joriy detal narxlari bilan mos bo'lishi kerak."""
+
+    def setUp(self):
+        from decimal import Decimal
+        self.Decimal = Decimal
+        self.furniture = Furniture.objects.create(
+            name='170lik Kupe',
+            craft_fee_rate=2,
+            master_fee_rate=6,
+            owner_fee_rate=24,
+        )
+        self.kromka = Detail.objects.create(name='Kromka (19×04)', price=Decimal('2200'))
+        self.ruchka = Detail.objects.create(name='Ruchka #300', price=Decimal('1700'))
+        FurnitureDetail.objects.create(
+            furniture=self.furniture,
+            detail=self.kromka,
+            quantity=Decimal('29.00'),
+        )
+        FurnitureDetail.objects.create(
+            furniture=self.furniture,
+            detail=self.ruchka,
+            quantity=Decimal('1.00'),
+        )
+        self.furniture.recalculate().save()
+
+    def test_material_total_matches_current_detail_prices(self):
+        from decimal import Decimal
+        expected = Decimal('2200') * Decimal('29') + Decimal('1700') * Decimal('1')
+        self.furniture.refresh_from_db()
+        self.assertEqual(self.furniture.material_total, expected)
+
+    def test_stale_snapshot_price_is_fixed_on_recalculate(self):
+        """Agar FurnitureDetail.price eski qolgan bo'lsa, recalculate joriy Detail narxini oladi."""
+        from decimal import Decimal
+        fd = self.furniture.details.get(detail=self.kromka)
+        # Snapshotni sun'iy ravishda eskirish (masalan eski 2100 farq)
+        FurnitureDetail.objects.filter(pk=fd.pk).update(price=Decimal('2100'))
+        fd.refresh_from_db()
+        self.assertEqual(fd.price, Decimal('2100'))
+
+        self.furniture.recalculate().save()
+        fd.refresh_from_db()
+        self.furniture.refresh_from_db()
+
+        self.assertEqual(fd.price, Decimal('2200'))
+        expected = Decimal('2200') * Decimal('29') + Decimal('1700') * Decimal('1')
+        self.assertEqual(self.furniture.material_total, expected)
+
+    def test_detail_price_change_updates_furniture_total(self):
+        from decimal import Decimal
+        self.kromka.price = Decimal('2300')
+        self.kromka.save()
+        self.furniture.refresh_from_db()
+        expected = Decimal('2300') * Decimal('29') + Decimal('1700') * Decimal('1')
+        self.assertEqual(self.furniture.material_total, expected)
+
+    def test_kupe_full_material_sum(self):
+        """Foydalanuvchi hisoblagan 1 358 700 bilan bir xil bo'lishi kerak."""
+        from decimal import Decimal
+        FurnitureDetail.objects.all().delete()
+        items = [
+            ('Faton 2lik', '5000', '4.00'),
+            ('Germetik Akfix', '30000', '0.50'),
+            ('Kardon Algarit', '90000', '0.80'),
+            ('Kromka (19×04)', '2200', '29.00'),
+            ('Laminat', '330000', '2.20'),
+            ('Lipichka', '2000', '4.00'),
+            ('Metan', '5700', '5.00'),
+            ('Oyna Farset', '100000', '0.90'),
+            ('Oyna Farset Metr', '5000', '4.10'),
+            ('Petle ITVP', '2500', '2.00'),
+            ('Qosh', '40000', '1.00'),
+            ('Reles 2metrli', '75000', '1.00'),
+            ('Rolik BBS', '24000', '3.00'),
+            ('Ruchka #300', '1700', '1.00'),
+            ('Ruchka (35 157)', '2800', '2.00'),
+            ('Ruchka Alumen 2metrlik', '33000', '2.00'),
+            ('Salaska Ximenyupin 35lik', '12000', '2.00'),
+            ('Taqa Qovun', '1400', '4.00'),
+            ('Turba Qovun', '30000', '0.50'),
+            ('Zamok Drawer Lock', '5000', '1.00'),
+        ]
+        for name, price, qty in items:
+            d = Detail.objects.create(name=name, price=Decimal(price))
+            FurnitureDetail.objects.create(
+                furniture=self.furniture,
+                detail=d,
+                quantity=Decimal(qty),
+            )
+        self.furniture.recalculate().save()
+        self.furniture.refresh_from_db()
+        self.assertEqual(self.furniture.material_total, Decimal('1358700.00'))
+

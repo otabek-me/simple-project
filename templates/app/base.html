@@ -51,9 +51,33 @@
             }
         }
 
+        function roundHalfUp(value, digits) {
+            // Backend Decimal ROUND_HALF_UP bilan bir xil
+            const factor = Math.pow(10, digits);
+            return Math.round((value + Number.EPSILON) * factor) / factor;
+        }
+
         function fmt(n) {
-            // Backend bilan bir xil: 2 xonali, no rounding
-            return Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+            // Backend bilan bir xil: ROUND_HALF_UP, 2 xona
+            const fixed = roundHalfUp(Number(n) || 0, 2).toFixed(2);
+            const parts = fixed.split('.');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+            return parts.join('.');
+        }
+
+        function parsePriceFromOption(option) {
+            if (!option) return 0;
+            if (option.dataset && option.dataset.price) {
+                const fromData = parseFloat(String(option.dataset.price).replace(/\s/g, '').replace(',', '.'));
+                if (!Number.isNaN(fromData)) return fromData;
+            }
+            // Fallback: "Nom — 12345.00" matnidan oxirgi qism
+            const txt = option.text || '';
+            const parts = txt.split('—');
+            if (parts.length > 1) {
+                return parseFloat(parts[parts.length - 1].trim().replace(/\s/g, '').replace(',', '.')) || 0;
+            }
+            return 0;
         }
 
         window.addEventListener('DOMContentLoaded', function() {
@@ -67,30 +91,28 @@
             // Scroll to first error if any
             scrollToFirstError();
 
-            // Live preview - faqat ko'rsatish uchun, asosiy hisob backendda
+            // Live preview - forma dropdownidagi joriy narxlar bilan hisoblaydi
             function updatePreview() {
                 if (!document.querySelector('#id_craft_fee_rate')) return;
-                const rows = document.querySelectorAll('.detail-row');
+                const rows = document.querySelectorAll('#detail-container .detail-row');
                 let material = 0;
                 rows.forEach(function(row) {
                     const deleteCheckbox = row.querySelector('input[type="checkbox"][name*="-DELETE"]');
                     if (deleteCheckbox && deleteCheckbox.checked) return;
+                    if (row.style.display === 'none') return;
                     const select = row.querySelector('.detail-select');
-                    const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
+                    const qtyInput = row.querySelector('.quantity-input');
+                    const quantity = qtyInput ? (parseFloat(qtyInput.value) || 0) : 0;
                     let price = 0;
-                    if (select && select.selectedIndex > 0) {
-                        const txt = select.options[select.selectedIndex].text;
-                        const parts = txt.split('—');
-                        if (parts.length > 1) {
-                            price = parseFloat(parts[parts.length-1].trim().replace(/\s/g, '')) || 0;
-                        }
+                    if (select && select.selectedIndex >= 0) {
+                        price = parsePriceFromOption(select.options[select.selectedIndex]);
                     }
                     material += price * quantity;
                 });
                 const craftRate = parseFloat(document.querySelector('#id_craft_fee_rate').value) || 0;
                 const masterRate = parseFloat(document.querySelector('#id_master_fee_rate').value) || 0;
                 const ownerRate = parseFloat(document.querySelector('#id_owner_fee_rate').value) || 0;
-                // Backend bilan bir xil formula, hech qanday yaxlitlash
+                // Backend bilan bir xil formula
                 const craftAmt = material * craftRate / 100;
                 const s1 = material + craftAmt;
                 const masterAmt = s1 * masterRate / 100;
@@ -103,7 +125,11 @@
                 if (el('#preview-master')) el('#preview-master').textContent = fmt(masterAmt);
                 if (el('#preview-owner')) el('#preview-owner').textContent = fmt(ownerAmt);
                 if (el('#preview-total')) el('#preview-total').textContent = fmt(total);
+                if (el('#preview-craft-rate')) el('#preview-craft-rate').textContent = String(craftRate);
+                if (el('#preview-master-rate')) el('#preview-master-rate').textContent = String(masterRate);
+                if (el('#preview-owner-rate')) el('#preview-owner-rate').textContent = String(ownerRate);
             }
+
 
             const previewFields = ['#id_craft_fee_rate', '#id_master_fee_rate', '#id_owner_fee_rate'];
             previewFields.forEach(function(sel) {
