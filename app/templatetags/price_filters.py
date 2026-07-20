@@ -17,5 +17,5 @@ def format_price(value):
         int_part = int(parts[0])
         formatted = f"{int_part:,}".replace(',', ' ')
         return f"{formatted}.{parts[1]}"
-    except (ValueError, TypeError, Exception):
+    except (ValueError, TypeError, ArithmeticError):
         return str(value)

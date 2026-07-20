@@ -198,6 +198,7 @@ def detail_delete(request, pk):
     return redirect(reverse('detail_list'))
 
 
+@login_required
 def furniture_delete(request, pk):
     furniture = get_object_or_404(Furniture, pk=pk)
     if request.method == 'POST':

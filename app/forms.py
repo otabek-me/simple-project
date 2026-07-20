@@ -7,6 +7,13 @@ from django.core.exceptions import ValidationError
 from .models import Detail, Furniture, FurnitureDetail
 
 
+def _clean_whole_number(value, field_error):
+    """Pul/foiz maydonlari faqat butun son bo'lishini talab qiladi."""
+    if value is not None and value % 1 != 0:
+        raise forms.ValidationError(field_error)
+    return value
+
+
 def _translate_password_error(message):
     translations = {
         'This password is too short. It must contain at least 8 characters.': 'Parol juda qisqa. Kamida 8 ta belgidan iborat bo‘lishi kerak.',
@@ -80,6 +87,24 @@ class FurnitureForm(forms.ModelForm):
             },
         }
 
+    def clean_craft_fee_rate(self):
+        return _clean_whole_number(
+            self.cleaned_data.get('craft_fee_rate'),
+            'Foiz butun son bo‘lishi kerak (masalan: 2).',
+        )
+
+    def clean_master_fee_rate(self):
+        return _clean_whole_number(
+            self.cleaned_data.get('master_fee_rate'),
+            'Foiz butun son bo‘lishi kerak (masalan: 5).',
+        )
+
+    def clean_owner_fee_rate(self):
+        return _clean_whole_number(
+            self.cleaned_data.get('owner_fee_rate'),
+            'Foiz butun son bo‘lishi kerak (masalan: 10).',
+        )
+
 
 class DetailChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
@@ -140,6 +165,12 @@ class DetailForm(forms.ModelForm):
                 'min_value': 'Narx 0 dan kichik bo‘lishi mumkin emas.',
             },
         }
+
+    def clean_price(self):
+        return _clean_whole_number(
+            self.cleaned_data.get('price'),
+            'Narx butun son bo‘lishi kerak (masalan: 150000).',
+        )
 
 
 class BaseDetailFormSet(forms.BaseInlineFormSet):

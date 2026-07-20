@@ -1,6 +1,12 @@
 from django.db import models
 from django.core.validators import MinValueValidator
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
+
+CENTS = Decimal('0.01')
+
+def to_money(value):
+    """Pul summalarini har doim izchil qoidada (0.5 -> yuqoriga) 2 xonaga yaxlitlaydi."""
+    return value.quantize(CENTS, rounding=ROUND_HALF_UP)
 
 class Detail(models.Model):
     name = models.CharField(max_length=120)
@@ -110,11 +116,16 @@ class Furniture(models.Model):
         owner_amount = subtotal * self.owner_fee_rate / Decimal('100')
         total = subtotal + owner_amount
 
-        self.material_total = base
-        self.craft_fee_amount = craft_amount
-        self.master_fee_amount = master_amount
-        self.owner_fee_amount = owner_amount
-        self.total_price = total
+        # Django DecimalField saqlashda rounding ko'rsatilmasa ROUND_HALF_EVEN
+        # (bankir yaxlitlashi) ishlatadi — bu 0.5 chegarasidagi summalarni
+        # kutilmagan tomonga yaxlitlab, "bir xil narxlar turlicha yaxlitlanadi"
+        # degan taassurot uyg'otadi. Shu sabab bu yerda har bir maydonni
+        # aniq ROUND_HALF_UP bilan o'zimiz yaxlitlaymiz.
+        self.material_total = to_money(base)
+        self.craft_fee_amount = to_money(craft_amount)
+        self.master_fee_amount = to_money(master_amount)
+        self.owner_fee_amount = to_money(owner_amount)
+        self.total_price = to_money(total)
         return self
 
 class FurnitureDetail(models.Model):
