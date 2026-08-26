@@ -1,9 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from decimal import Decimal
 
 from .forms import DetailForm, FurnitureDetailForm, FurnitureForm
-from .models import Detail, Furniture, FurnitureDetail
+from .models import Detail, Furniture, FurnitureDetail, Client, Sale, SaleItem
 
 
 class FurnitureEditTests(TestCase):
@@ -208,4 +209,100 @@ class MaterialTotalSyncTests(TestCase):
         self.furniture.recalculate().save()
         self.furniture.refresh_from_db()
         self.assertEqual(self.furniture.material_total, Decimal('1358700.00'))
+
+
+class SaleCancelTests(TestCase):
+    """Sotuvni bekor qilish va mebellarni zahiraga qaytarish testlari."""
+
+    def setUp(self):
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(username='admin', password='password')
+        self.client.force_login(self.user)
+        self.furniture = Furniture.objects.create(
+            name='Shkaf',
+            quantity=5,
+            craft_fee_rate=2,
+            master_fee_rate=5,
+            owner_fee_rate=10,
+        )
+        self.client_obj = Client.objects.create(name='Ali')
+
+    def test_sale_creation_reduces_furniture_quantity(self):
+        """Sotuv yaratilganda mebel zahiradan kamayadi."""
+        sale = Sale.objects.create(
+            client=self.client_obj,
+            payment_type='cash',
+            total_amount=Decimal('100000'),
+            paid_amount=Decimal('100000'),
+            created_by=self.user,
+        )
+        SaleItem.objects.create(
+            sale=sale,
+            furniture=self.furniture,
+            quantity=Decimal('2'),
+            price_at_sale=Decimal('50000'),
+        )
+        self.furniture.refresh_from_db()
+        self.assertEqual(self.furniture.quantity, 3)
+
+    def test_sale_cancel_returns_furniture_to_reserve(self):
+        """Sotuv bekor qilinganda mebel zahiraga qaytadi."""
+        sale = Sale.objects.create(
+            client=self.client_obj,
+            payment_type='cash',
+            total_amount=Decimal('100000'),
+            paid_amount=Decimal('100000'),
+            created_by=self.user,
+        )
+        SaleItem.objects.create(
+            sale=sale,
+            furniture=self.furniture,
+            quantity=Decimal('2'),
+            price_at_sale=Decimal('50000'),
+        )
+        self.furniture.refresh_from_db()
+        self.assertEqual(self.furniture.quantity, 3)
+
+        # Bekor qilish
+        sale.cancel(user=self.user)
+        sale.refresh_from_db()
+        self.furniture.refresh_from_db()
+
+        self.assertEqual(sale.status, 'cancelled')
+        self.assertIsNotNone(sale.cancelled_at)
+        self.assertEqual(sale.cancelled_by, self.user)
+        self.assertEqual(self.furniture.quantity, 5)
+
+    def test_sale_cancel_view_returns_furniture_to_reserve(self):
+        """Sotuvni bekor qilish sahifasi mebelni zahiraga qaytaradi."""
+        sale = Sale.objects.create(
+            client=self.client_obj,
+            payment_type='cash',
+            total_amount=Decimal('100000'),
+            paid_amount=Decimal('100000'),
+            created_by=self.user,
+        )
+        SaleItem.objects.create(
+            sale=sale,
+            furniture=self.furniture,
+            quantity=Decimal('1'),
+            price_at_sale=Decimal('50000'),
+        )
+        self.furniture.refresh_from_db()
+        self.assertEqual(self.furniture.quantity, 4)
+
+        response = self.client.post(reverse('sale_cancel', args=[sale.pk]))
+        self.assertEqual(response.status_code, 302)
+        sale.refresh_from_db()
+        self.furniture.refresh_from_db()
+
+        self.assertEqual(sale.status, 'cancelled')
+        self.assertEqual(self.furniture.quantity, 5)
+
+    def test_reserve_list_page_renders(self):
+        """Zahira sahifasi mebellarni ko'rsatadi."""
+        response = self.client.get(reverse('reserve_list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Zahiradagi mebellar')
+        self.assertContains(response, 'Shkaf')
 

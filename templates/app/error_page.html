@@ -1,0 +1,27 @@
+{% extends 'app/base.html' %}
+{% block title %}Xatolik{% endblock %}
+{% block content %}
+<section class="panel" style="text-align: center; padding: 60px 24px;">
+    <div style="font-size: 4rem; margin-bottom: 16px;">
+        {% if status_code == 404 %}🔍
+        {% elif status_code == 403 %}🚫
+        {% elif status_code == 500 %}⚠️
+        {% else %}❌
+        {% endif %}
+    </div>
+    <h2 style="font-size: 1.8rem; margin-bottom: 12px;">
+        {% if status_code == 404 %}Sahifa topilmadi
+        {% elif status_code == 403 %}Kirish taqiqlangan
+        {% elif status_code == 500 %}Server xatoligi
+        {% else %}Xatolik yuz berdi
+        {% endif %}
+    </h2>
+    <p style="color: var(--muted); font-size: 1.1rem; margin-bottom: 32px; max-width: 500px; margin-left: auto; margin-right: auto;">
+        {{ message|default:"Kechirasiz, so'ralgan sahifa topilmadi yoki xatolik yuz berdi." }}
+    </p>
+    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+        <a href="{% url 'furniture_list' %}" class="button button-primary">🏠 Bosh sahifaga o'tish</a>
+        <a href="javascript:history.back()" class="button button-secondary">← Orqaga qaytish</a>
+    </div>
+</section>
+{% endblock %}

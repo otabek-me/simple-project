@@ -12,23 +12,24 @@
         <div class="container navbar-content">
             <div class="navbar-brand">
                 <h1>Mebel narxlash</h1>
-                <p>Detal va ustama hisoblari</p>
             </div>
-            <div class="navbar-actions">
-                <a class="navbar-link" href="{% url 'furniture_list' %}">📋 Ro'yxat</a>
+            <button class="navbar-toggle" id="navbar-toggle" aria-label="Menu">☰</button>
+            <div class="navbar-actions" id="navbar-menu">
+                <a class="navbar-link" href="{% url 'furniture_list' %}">📋 Mebellar</a>
+                <a class="navbar-link" href="{% url 'reserve_list' %}">📦 Zahira</a>
                 <a class="navbar-link" href="{% url 'detail_list' %}">🧩 Detallar</a>
-                <a class="button button-primary" href="{% url 'furniture_create' %}">➕ Yangi mebel</a>
+                <a class="navbar-link" href="{% url 'sale_list' %}">💰 Sotuvlar</a>
+                <a class="navbar-link" href="{% url 'client_list' %}">👥 Klinetlar</a>
+                <a class="navbar-link" href="{% url 'statistics' %}">📊 Statistika</a>
+                <a class="button button-primary" href="{% url 'furniture_create' %}">➕ Yangi</a>
                 {% if user.is_authenticated %}
-                    <a class="navbar-link" href="{% url 'login' %}">Parolni o‘zgartirish</a>
+                    <a class="navbar-link" href="{% url 'login' %}">🔑 Parol</a>
                     <form method="post" action="{% url 'logout' %}" style="display: inline;">
                         {% csrf_token %}
-                        <button type="submit" class="navbar-link" style="background: transparent; border: none; cursor: pointer; padding: 8px 14px;">Chiqish</button>
+                        <button type="submit" class="navbar-link" style="background: transparent; border: none; cursor: pointer; padding: 8px 14px;">🚪 Chiqish</button>
                     </form>
                 {% else %}
                     <a class="navbar-link" href="{% url 'login' %}">Kirish</a>
-                {% endif %}
-                {% if not request.resolver_match.url_name|stringformat:"s" == "furniture_list" %}
-                    <a class="navbar-link back-link" href="{% url 'furniture_list' %}">← Orqaga</a>
                 {% endif %}
             </div>
         </div>
@@ -37,6 +38,17 @@
         {% block content %}{% endblock %}
     </main>
     <script>
+        // Mobile menu toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggle = document.getElementById('navbar-toggle');
+            const menu = document.getElementById('navbar-menu');
+            if (toggle && menu) {
+                toggle.addEventListener('click', function() {
+                    menu.classList.toggle('open');
+                });
+            }
+        });
+
         function scrollToFirstError() {
             const firstError = document.querySelector('.has-error, .errorlist, .error');
             if (firstError) {

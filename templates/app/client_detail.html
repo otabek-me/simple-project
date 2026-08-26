@@ -1,0 +1,137 @@
+{% extends 'app/base.html' %}
+{% load price_filters %}
+{% block title %}{{ client.name }} - tafsilotlar{% endblock %}
+{% block content %}
+<section class="panel">
+    <div class="section-header">
+        <h2 style="margin: 0;">{{ client.name }}</h2>
+        <a class="button button-secondary" href="{% url 'client_list' %}">← Klinetlar</a>
+    </div>
+
+    <!-- Client info cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
+        <div class="stat-card" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">
+            <div class="stat-label">Telefon</div>
+            <div class="stat-value" style="font-size: 1.1rem;">{{ client.phone|default:"Yo'q" }}</div>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #059669, #047857);">
+            <div class="stat-label">Jami xarid</div>
+            <div class="stat-value" style="font-size: 1.2rem;">{{ total_purchases|format_price }}</div>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #16a34a, #15803d);">
+            <div class="stat-label">To'langan</div>
+            <div class="stat-value" style="font-size: 1.2rem;">{{ total_paid|format_price }}</div>
+        </div>
+        {% if total_debt > 0 %}
+            <div class="stat-card" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">
+                <div class="stat-label">Qarzdorlik</div>
+                <div class="stat-value" style="font-size: 1.2rem;">{{ total_debt|format_price }}</div>
+            </div>
+        {% else %}
+            <div class="stat-card" style="background: linear-gradient(135deg, #16a34a, #15803d);">
+                <div class="stat-label">Qarzdorlik</div>
+                <div class="stat-value" style="font-size: 1.2rem; color: white;">0</div>
+                <div class="stat-sub">✅ To'liq to'langan</div>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if client.address %}
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-title">Manzil</div>
+            <div>{{ client.address }}</div>
+        </div>
+    {% endif %}
+
+    {% if client.notes %}
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-title">Izoh</div>
+            <div>{{ client.notes }}</div>
+        </div>
+    {% endif %}
+
+    <!-- Furniture stats -->
+    {% if furniture_stats %}
+        <h3>🛋️ Sotib olingan mebellar tahlili</h3>
+        <div style="overflow-x: auto; margin-bottom: 32px;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Mebel nomi</th>
+                        <th>Soni</th>
+                        <th>Jami summa</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for name, stats in furniture_stats.items %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ name }}</td>
+                            <td>{{ stats.count }}</td>
+                            <td class="td-price">{{ stats.total|format_price }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    <!-- Sales history -->
+    <h3>📋 Sotuvlar tarixi</h3>
+    {% if sales %}
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Mebellar</th>
+                        <th>Jami summa</th>
+                        <th>To'langan</th>
+                        <th>Qarzdorlik</th>
+                        <th>To'lov turi</th>
+                        <th>Holat</th>
+                        <th>Sana</th>
+                        <th>Amallar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <div style="font-size: 0.85rem;">
+                                    {% for item in sale.items.all %}
+                                        <div>{{ item.furniture_name|default:item.furniture.name|default:'Noma\'lum' }} × {{ item.quantity }}</div>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td class="td-price">{{ sale.total_amount|format_price }}</td>
+                            <td class="td-price">{{ sale.paid_amount|format_price }}</td>
+                            <td class="td-price {% if sale.debt_amount > 0 %}td-debt{% else %}td-paid{% endif %}">
+                                {{ sale.debt_amount|format_price }}
+                            </td>
+                            <td>
+                                <span class="badge {% if sale.payment_type == 'cash' %}badge-success{% else %}badge-warning{% endif %}">
+                                    {{ sale.get_payment_type_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {% if sale.status == 'active' %}badge-success{% else %}badge-danger{% endif %}">
+                                    {{ sale.get_status_display }}
+                                </span>
+                            </td>
+                            <td style="white-space: nowrap;">{{ sale.created_at|date:'Y-m-d H:i' }}</td>
+                            <td>
+                                <a href="{% url 'sale_detail' sale.pk %}" class="button button-small button-secondary">Batafsil</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="notice">Bu klient uchun hali hech qanday sotuv amalga oshirilmagan.</p>
+    {% endif %}
+</section>
+{% endblock %}

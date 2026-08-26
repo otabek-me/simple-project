@@ -1,0 +1,60 @@
+{% extends 'app/base.html' %}
+{% load price_filters %}
+{% block title %}Klinetlar{% endblock %}
+{% block content %}
+<section class="panel">
+    <div class="section-header">
+        <h2 style="margin: 0;">Klinetlar ro'yxati</h2>
+        <a class="button button-primary" href="{% url 'sale_create' %}">➕ Yangi sotuv</a>
+    </div>
+
+    <form method="get" style="margin-bottom: 20px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+        <input type="search" name="q" value="{{ query }}" placeholder="Klient nomi bo'yicha qidirish..." class="field-input" style="flex: 1; min-width: 220px;">
+        <button type="submit" class="button button-secondary">Qidirish</button>
+        <a class="button button-secondary" href="{% url 'client_list' %}">Hammasini ko'rsatish</a>
+    </form>
+
+    {% if clients %}
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Ism</th>
+                        <th>Telefon</th>
+                        <th>Sotuvlar soni</th>
+                        <th>Jami xarid</th>
+                        <th>To'langan</th>
+                        <th>Qarzdorlik</th>
+                        <th>Amallar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in clients %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <a href="{% url 'client_detail' client.pk %}" style="color: var(--primary); font-weight: 600; text-decoration: none;">
+                                    {{ client.name }}
+                                </a>
+                            </td>
+                            <td>{{ client.phone|default:'-' }}</td>
+                            <td>{{ client.sales_count }}</td>
+                            <td class="td-price">{{ client.total_purchases_sum|default:0|format_price }}</td>
+                            <td class="td-price">{{ client.total_paid_sum|default:0|format_price }}</td>
+                            <td class="td-price {% if client.total_purchases_sum|default:0 > client.total_paid_sum|default:0 %}td-debt{% else %}td-paid{% endif %}">
+                                {{ client.total_debt|default:0|format_price }}
+                            </td>
+                            <td>
+                                <a href="{% url 'client_detail' client.pk %}" class="button button-small button-secondary">Batafsil</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="notice">Hali hech qanday klient yo'q. Birinchi sotuvni amalga oshiring.</p>
+    {% endif %}
+</section>
+{% endblock %}

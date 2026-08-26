@@ -1,0 +1,74 @@
+{% extends 'app/base.html' %}
+{% load price_filters %}
+{% block title %}Zahira{% endblock %}
+{% block content %}
+    <section class="panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h2 style="margin: 0;">Zahiradagi mebellar</h2>
+            <a class="button button-primary" href="{% url 'furniture_create' %}">➕ Yangi mebel</a>
+        </div>
+
+        <div class="card" style="margin-bottom: 24px; background: #f8fafc;">
+            <div class="card-title">📦 Zahiraga qo'shish</div>
+            <form method="post" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+                {% csrf_token %}
+                <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 200px;">
+                    <label for="{{ add_form.furniture.id_for_label }}">{{ add_form.furniture.label }}</label>
+                    {{ add_form.furniture }}
+                    {{ add_form.furniture.errors }}
+                </div>
+                <div class="form-group" style="margin-bottom: 0; min-width: 100px;">
+                    <label for="{{ add_form.quantity.id_for_label }}">{{ add_form.quantity.label }}</label>
+                    {{ add_form.quantity }}
+                    {{ add_form.quantity.errors }}
+                </div>
+                <button type="submit" class="button button-primary" name="reserve_add_submit" value="1">➕ Qo'shish</button>
+            </form>
+        </div>
+
+        {% if furnitures %}
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Mebel nomi</th>
+                            <th>Zahiradagi soni</th>
+                            <th>Narxi</th>
+                            <th>Amallar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for furniture in furnitures %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td style="font-weight: 600;">{{ furniture.name }}</td>
+                                <td>
+                                    <span class="badge {% if furniture.quantity > 0 %}badge-success{% else %}badge-danger{% endif %}" style="font-size: 1rem;">
+                                        {{ furniture.quantity }} ta
+                                    </span>
+                                </td>
+                                <td class="td-price">{{ furniture.total_price|format_price }}</td>
+                                <td>
+                                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                        <form method="post" action="{% url 'reserve_edit' furniture.pk %}" style="display: flex; gap: 4px; align-items: center;">
+                                            {% csrf_token %}
+                                            <input type="number" name="quantity" value="{{ furniture.quantity }}" min="0" step="1" class="field-input" style="width: 70px; padding: 6px 8px; font-size: 0.9rem;">
+                                            <button type="submit" class="button button-small button-secondary">✏️</button>
+                                        </form>
+                                        <form method="post" action="{% url 'reserve_delete' furniture.pk %}" onsubmit="return confirm('{{ furniture.name }} ni o\'chirishni tasdiqlaysizmi?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="button button-small button-danger">🗑️</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="notice">Zahirada hech qanday mebel yo'q. Birinchi mebelni qo'shing.</p>
+        {% endif %}
+    </section>
+{% endblock %}

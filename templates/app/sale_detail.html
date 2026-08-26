@@ -1,0 +1,182 @@
+{% extends 'app/base.html' %}
+{% load price_filters %}
+{% block title %}Sotuv tafsilotlari{% endblock %}
+{% block content %}
+<section class="panel">
+    <div class="section-header">
+        <h2 style="margin: 0;">Sotuv tafsilotlari</h2>
+        <a class="button button-secondary" href="{% url 'sale_list' %}">← Orqaga</a>
+    </div>
+
+    <div class="card-grid" style="margin-bottom: 24px;">
+        <div class="card">
+            <div class="card-title">Klient</div>
+            <div style="font-size: 1.2rem; font-weight: 700;">
+                <a href="{% url 'client_detail' sale.client.pk %}" style="color: var(--primary); text-decoration: none;">
+                    {{ sale.client.name }}
+                </a>
+            </div>
+            {% if sale.client.phone %}
+                <div style="color: var(--muted); margin-top: 4px;">📞 {{ sale.client.phone }}</div>
+            {% endif %}
+        </div>
+        <div class="card">
+            <div class="card-title">To'lov turi</div>
+            <div>
+                <span class="badge {% if sale.payment_type == 'cash' %}badge-success{% else %}badge-warning{% endif %}" style="font-size: 1.1rem;">
+                    {{ sale.get_payment_type_display }}
+                </span>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">Holat</div>
+            <div>
+                <span class="badge {% if sale.status == 'active' %}badge-success{% else %}badge-danger{% endif %}" style="font-size: 1.1rem;">
+                    {{ sale.get_status_display }}
+                </span>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">Sana</div>
+            <div style="font-weight: 600;">{{ sale.created_at|date:'Y-m-d H:i' }}</div>
+        </div>
+        <div class="card">
+            <div class="card-title">Kim qo'shgan</div>
+            <div style="font-weight: 600;">{{ sale.created_by.username|default:'Noma\'lum' }}</div>
+        </div>
+    </div>
+
+    {% if sale.status == 'cancelled' %}
+        <div class="card" style="margin-bottom: 24px; border: 2px solid var(--danger); background: #fef2f2;">
+            <div class="card-title" style="color: var(--danger);">❌ Bekor qilingan sotuv</div>
+            <div>
+                <p style="margin: 4px 0;">
+                    <strong>Bekor qilingan vaqt:</strong> {{ sale.cancelled_at|date:'Y-m-d H:i' }}
+                </p>
+                {% if sale.cancelled_by %}
+                    <p style="margin: 4px 0;">
+                        <strong>Bekor qilgan:</strong> {{ sale.cancelled_by.username }}
+                    </p>
+                {% endif %}
+                <p style="margin: 4px 0; color: var(--danger);">
+                    Ushbu sotuv bekor qilingan va mebellar zahiraga qaytarilgan.
+                </p>
+            </div>
+        </div>
+    {% endif %}
+
+    <h3>Sotilgan mebellar</h3>
+    <div style="overflow-x: auto; margin-bottom: 24px;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Mebel nomi</th>
+                    <th>Soni</th>
+                    <th>Narxi</th>
+                    <th>Summa</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in sale.items.all %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ item.furniture_name|default:item.furniture.name|default:'Noma\'lum' }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td class="td-price">{{ item.price_at_sale|format_price }}</td>
+                        <td class="td-price">{{ item.subtotal|format_price }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="5" class="notice">Hech qanday mebel topilmadi</td></tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="4" style="text-align: right;">Jami:</th>
+                    <th class="td-price">{{ sale.total_amount|format_price }}</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    {% if sale.notes %}
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-title">Izoh</div>
+            <div>{{ sale.notes }}</div>
+        </div>
+    {% endif %}
+
+    <div class="card-grid" style="margin-bottom: 24px;">
+        <div class="card" style="background: linear-gradient(135deg, #f0fdf4, #ecfdf5);">
+            <div class="card-title">To'langan summa</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);">{{ sale.paid_amount|format_price }}</div>
+        </div>
+        {% if sale.debt_amount > 0 %}
+            <div class="card" style="background: linear-gradient(135deg, #fef2f2, #fef2f2);">
+                <div class="card-title">Qarzdorlik</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--danger);">{{ sale.debt_amount|format_price }}</div>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if sale.status == 'active' %}
+        <div class="card" style="margin-bottom: 24px; border: 1px solid var(--danger);">
+            <div class="card-title" style="color: var(--danger);">Amallar</div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <form method="post" action="{% url 'sale_cancel' sale.pk %}" onsubmit="return confirm('Sotuvni bekor qilishni tasdiqlaysizmi? Mebellar zahiraga qaytariladi.');">
+                    {% csrf_token %}
+                    <button type="submit" class="button button-danger">❌ Sotuvni bekor qilish</button>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if sale.payment_type == 'credit' and sale.status == 'active' %}
+        <h3>To'lovlar tarixi</h3>
+        {% if sale.payments.all %}
+            <div style="overflow-x: auto; margin-bottom: 24px;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Summa</th>
+                            <th>Izoh</th>
+                            <th>Sana</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in sale.payments.all %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td class="td-price">{{ payment.amount|format_price }}</td>
+                                <td>{{ payment.notes|default:'-' }}</td>
+                                <td style="white-space: nowrap;">{{ payment.created_at|date:'Y-m-d H:i' }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="notice">Hali hech qanday to'lov amalga oshirilmagan.</p>
+        {% endif %}
+
+        {% if sale.debt_amount > 0 and sale.status == 'active' %}
+            <div class="card" style="margin-bottom: 24px;">
+                <div class="card-title">Yangi to'lov qo'shish</div>
+                <form method="post" action="{% url 'add_payment' sale.pk %}" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+                    {% csrf_token %}
+                    <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
+                        <label for="id_amount">Summa</label>
+                        <input type="number" name="amount" class="field-input" id="id_amount" min="0.01" step="1" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
+                        <label for="id_notes">Izoh</label>
+                        <input type="text" name="notes" class="field-input" id="id_notes" placeholder="Izoh">
+                    </div>
+                    <button type="submit" class="button button-primary" name="payment_submit" value="1">To'lov qo'shish</button>
+                </form>
+            </div>
+        {% endif %}
+    {% endif %}
+</section>
+{% endblock %}

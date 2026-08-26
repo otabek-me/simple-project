@@ -1,0 +1,232 @@
+{% extends 'app/base.html' %}
+{% load price_filters %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<section class="panel form-panel">
+    <h2>{{ page_title }}</h2>
+    <form method="post" novalidate id="sale-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-group">
+            <label for="{{ form.client.id_for_label }}">{{ form.client.label }}</label>
+            {{ form.client }}
+            {{ form.client.errors }}
+        </div>
+
+        <div class="client-add-section" style="margin-bottom: 16px;">
+            <details>
+                <summary style="cursor: pointer; color: var(--primary); font-weight: 600; padding: 8px 0;">+ Yangi klient qo'shish</summary>
+                <div style="margin-top: 12px; padding: 16px; background: #f8fafc; border-radius: 14px; border: 1px solid var(--border);">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="{{ form.new_client_name.id_for_label }}">{{ form.new_client_name.label }}</label>
+                            {{ form.new_client_name }}
+                            {{ form.new_client_name.errors }}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.new_client_phone.id_for_label }}">{{ form.new_client_phone.label }}</label>
+                            {{ form.new_client_phone }}
+                            {{ form.new_client_phone.errors }}
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </div>
+
+        <div class="detail-section">
+            <div class="section-header">
+                <h3>Sotiladigan mebellar</h3>
+                <button id="add-item-row" class="button button-small">➕ Yangi mebel</button>
+            </div>
+            {{ formset.management_form }}
+            {% if formset.non_form_errors %}
+                <div class="formset-errors">
+                    <ul>
+                        {% for error in formset.non_form_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+            <div id="item-container">
+                {% for form in formset.forms %}
+                    <div class="detail-row item-row">
+                        {{ form.id }}
+                        <div class="grid-3">
+                            <div class="form-group">
+                                <label for="{{ form.furniture.id_for_label }}">{{ form.furniture.label }}</label>
+                                {{ form.furniture }}
+                                {{ form.furniture.errors }}
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ form.quantity.id_for_label }}">{{ form.quantity.label }}</label>
+                                {{ form.quantity }}
+                                {{ form.quantity.errors }}
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ form.price_at_sale.id_for_label }}">{{ form.price_at_sale.label }}</label>
+                                {{ form.price_at_sale }}
+                                {{ form.price_at_sale.errors }}
+                            </div>
+                        </div>
+                        {% if formset.can_delete %}
+                            <div class="delete-row">
+                                {{ form.DELETE }}
+                                <button type="button" class="button button-danger delete-item-btn" data-for="{{ form.DELETE.id_for_label }}">🗑️ O'chirish</button>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            <template id="empty-item-form">
+                <div class="detail-row item-row">
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label for="id_items-__prefix__-furniture">Mebel</label>
+                            <select name="items-__prefix__-furniture" class="field-input furniture-select" id="id_items-__prefix__-furniture">
+                                <option value="">- Mebel tanlang -</option>
+                                {% for f in furnitures %}
+                                    <option value="{{ f.pk }}" data-price="{{ f.total_price }}">{{ f.name }} ({{ f.quantity }} ta) — {{ f.total_price|format_price }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="id_items-__prefix__-quantity">Soni</label>
+                            <input type="number" name="items-__prefix__-quantity" class="field-input quantity-input" id="id_items-__prefix__-quantity" min="0.01" step="1" value="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="id_items-__prefix__-price_at_sale">Narxi</label>
+                            <input type="number" name="items-__prefix__-price_at_sale" class="field-input price-input" id="id_items-__prefix__-price_at_sale" min="0" step="1">
+                        </div>
+                    </div>
+                    <div class="delete-row">
+                        <input type="checkbox" name="items-__prefix__-DELETE" id="id_items-__prefix__-DELETE" style="display:none;">
+                        <button type="button" class="button button-danger delete-item-btn" data-for="id_items-__prefix__-DELETE">🗑️ O'chirish</button>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="{{ form.payment_type.id_for_label }}">{{ form.payment_type.label }}</label>
+                {{ form.payment_type }}
+                {{ form.payment_type.errors }}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
+                {{ form.notes }}
+                {{ form.notes.errors }}
+            </div>
+        </div>
+
+        <section class="summary-card" id="sale-summary">
+            <h3>Sotuv xulosasi</h3>
+            <div class="summary-row"><span>Mebellar soni</span><strong id="preview-items-count">0</strong></div>
+            <div class="summary-row"><span>Jami summa</span><strong id="preview-total" style="color: var(--success); font-size: 1.3rem;">0.00 so'm</strong></div>
+        </section>
+
+        <button type="submit" class="button button-primary full-width">Saqlash</button>
+    </form>
+</section>
+
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+    function updateSalePreview() {
+        let total = 0;
+        let count = 0;
+        document.querySelectorAll('#item-container .item-row').forEach(function(row) {
+            const deleteCheckbox = row.querySelector('input[type="checkbox"][name*="-DELETE"]');
+            if (deleteCheckbox && deleteCheckbox.checked) return;
+            if (row.style.display === 'none') return;
+            const select = row.querySelector('.furniture-select');
+            const qtyInput = row.querySelector('.quantity-input');
+            const priceInput = row.querySelector('.price-input');
+            let quantity = qtyInput ? (parseFloat(qtyInput.value) || 0) : 0;
+            let price = priceInput ? (parseFloat(priceInput.value) || 0) : 0;
+            if (!price && select && select.selectedIndex >= 0) {
+                const opt = select.options[select.selectedIndex];
+                price = parseFloat(opt.dataset.price) || 0;
+            }
+            if (quantity > 0 && price > 0) {
+                total += price * quantity;
+                count++;
+            }
+        });
+        document.getElementById('preview-items-count').textContent = count;
+        document.getElementById('preview-total').textContent = total.toLocaleString() + ' so\'m';
+    }
+
+    // Auto-fill price when furniture is selected (always fill)
+    document.body.addEventListener('change', function(e) {
+        if (e.target.matches('.furniture-select')) {
+            const opt = e.target.options[e.target.selectedIndex];
+            const price = opt.dataset.price || '';
+            const row = e.target.closest('.item-row');
+            if (row) {
+                const priceInput = row.querySelector('.price-input');
+                if (priceInput) {
+                    priceInput.value = price;
+                }
+            }
+            updateSalePreview();
+        }
+    });
+
+    document.body.addEventListener('input', function(e) {
+        if (e.target.matches('.quantity-input') || e.target.matches('.price-input')) {
+            updateSalePreview();
+        }
+    });
+
+    // Handle delete checkbox change (using event delegation)
+    document.body.addEventListener('change', function(e) {
+        if (e.target.matches('input[type="checkbox"][name*="-DELETE"]')) {
+            const row = e.target.closest('.item-row');
+            if (row) row.style.display = e.target.checked ? 'none' : 'block';
+            updateSalePreview();
+        }
+    });
+
+    // Handle delete button clicks (using event delegation)
+    document.body.addEventListener('click', function(e) {
+        const btn = e.target.closest('.delete-item-btn');
+        if (!btn) return;
+        e.preventDefault();
+        const checkbox = document.getElementById(btn.getAttribute('data-for'));
+        if (checkbox && checkbox.type === 'checkbox') {
+            checkbox.checked = true;
+            const row = btn.closest('.item-row');
+            if (row) row.style.display = 'none';
+            updateSalePreview();
+        }
+    });
+
+    // Add item row
+    const addBtn = document.querySelector('#add-item-row');
+    if (addBtn) {
+        addBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const container = document.querySelector('#item-container');
+            const totalForms = document.querySelector('#id_items-TOTAL_FORMS');
+            const formIndex = parseInt(totalForms.value, 10);
+            const emptyRow = document.querySelector('#empty-item-form').innerHTML.replace(/__prefix__/g, formIndex);
+            container.insertAdjacentHTML('beforeend', emptyRow);
+            totalForms.value = formIndex + 1;
+            // Auto-fill price if furniture is already selected in the new row
+            const newRow = container.lastElementChild;
+            const select = newRow.querySelector('.furniture-select');
+            const priceInput = newRow.querySelector('.price-input');
+            if (select && priceInput && select.selectedIndex > 0) {
+                const opt = select.options[select.selectedIndex];
+                priceInput.value = opt.dataset.price || '';
+            }
+            updateSalePreview();
+        });
+    }
+
+    updateSalePreview();
+});
+</script>
+{% endblock %}

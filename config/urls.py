@@ -19,6 +19,10 @@ from django.urls import path, include
 
 from app import views as app_views
 
+handler404 = app_views.custom_page_not_found
+handler500 = app_views.custom_server_error
+handler403 = app_views.custom_permission_denied
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/login/', app_views.auth_page, name='login'),

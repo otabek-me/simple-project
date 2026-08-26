@@ -3,8 +3,9 @@ from django.contrib.auth import password_validation
 from django.contrib.auth.forms import AuthenticationForm as DjangoAuthenticationForm
 from django.contrib.auth.forms import PasswordChangeForm as DjangoPasswordChangeForm
 from django.core.exceptions import ValidationError
+from decimal import Decimal
 
-from .models import Detail, Furniture, FurnitureDetail
+from .models import Detail, Furniture, FurnitureDetail, Client, Sale, SaleItem, Payment
 
 
 def _clean_whole_number(value, field_error):
@@ -133,7 +134,6 @@ class FurnitureDetailForm(forms.ModelForm):
         },
     )
 
-
     class Meta:
         model = FurnitureDetail
         fields = ['detail', 'quantity']
@@ -193,3 +193,139 @@ class BaseDetailFormSet(forms.BaseInlineFormSet):
         ):
             return
         raise forms.ValidationError('Kamida bitta detal kiriting.')
+
+
+class ClientForm(forms.ModelForm):
+    class Meta:
+        model = Client
+        fields = ['name', 'phone', 'address', 'notes']
+        labels = {
+            'name': 'Ism',
+            'phone': 'Telefon',
+            'address': 'Manzil',
+            'notes': 'Izoh',
+        }
+        widgets = {
+            'name': forms.TextInput(attrs={'placeholder': 'Klient ismi', 'class': 'field-input', 'required': True}),
+            'phone': forms.TextInput(attrs={'placeholder': '+998 xx xxx xx xx', 'class': 'field-input'}),
+            'address': forms.Textarea(attrs={'placeholder': 'Manzil', 'class': 'field-input', 'rows': 2}),
+            'notes': forms.Textarea(attrs={'placeholder': 'Izoh', 'class': 'field-input', 'rows': 2}),
+        }
+
+
+class SaleItemForm(forms.ModelForm):
+    class Meta:
+        model = SaleItem
+        fields = ['furniture', 'quantity', 'price_at_sale']
+        labels = {
+            'furniture': 'Mebel',
+            'quantity': 'Soni',
+            'price_at_sale': 'Narxi',
+        }
+        widgets = {
+            'furniture': forms.Select(attrs={'class': 'field-input furniture-select'}),
+            'quantity': forms.NumberInput(attrs={'class': 'field-input quantity-input', 'min': '0.01', 'step': '1', 'value': 1}),
+            'price_at_sale': forms.NumberInput(attrs={'class': 'field-input price-input', 'min': '0', 'step': '1'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Faqat zahirada bor mebellarni ko'rsatish
+        self.fields['furniture'].queryset = Furniture.objects.filter(quantity__gt=0).order_by('name')
+        self.fields['furniture'].empty_label = '- Mebel tanlang -'
+        # Mebel nomiga zahiradagi sonini qo'shish
+        self.fields['furniture'].label_from_instance = lambda obj: f"{obj.name} ({obj.quantity} ta)"
+
+
+class BaseSaleItemFormSet(forms.BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        if any(
+            form.cleaned_data and not form.cleaned_data.get('DELETE', False)
+            for form in self.forms
+        ):
+            return
+        raise forms.ValidationError('Kamida bitta mebel qo\'shing.')
+
+
+class SaleForm(forms.ModelForm):
+    new_client_name = forms.CharField(
+        required=False,
+        label='Yangi klient',
+        widget=forms.TextInput(attrs={'placeholder': 'Yangi klient ismi', 'class': 'field-input'}),
+    )
+    new_client_phone = forms.CharField(
+        required=False,
+        label='Telefon',
+        widget=forms.TextInput(attrs={'placeholder': '+998 xx xxx xx xx', 'class': 'field-input'}),
+    )
+
+    class Meta:
+        model = Sale
+        fields = ['client', 'payment_type', 'notes']
+        labels = {
+            'client': 'Klient',
+            'payment_type': "To'lov turi",
+            'notes': 'Izoh',
+        }
+        widgets = {
+            'client': forms.Select(attrs={'class': 'field-input client-select'}),
+            'payment_type': forms.Select(attrs={'class': 'field-input'}),
+            'notes': forms.Textarea(attrs={'placeholder': 'Qo\'shimcha izoh', 'class': 'field-input', 'rows': 2}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['client'].empty_label = '- Klientni tanlang yoki yangisini qo\'shing -'
+        # Order clients alphabetically
+        self.fields['client'].queryset = Client.objects.all().order_by('name')
+
+    def clean(self):
+        cleaned_data = super().clean()
+        client = cleaned_data.get('client')
+        new_name = cleaned_data.get('new_client_name')
+
+        if not client and not new_name:
+            raise forms.ValidationError('Klientni tanlang yoki yangi klient qo\'shing.')
+
+        if new_name:
+            # Create or get client
+            client, created = Client.objects.get_or_create(
+                name=new_name.strip(),
+                defaults={
+                    'phone': cleaned_data.get('new_client_phone', ''),
+                }
+            )
+            cleaned_data['client'] = client
+
+        return cleaned_data
+
+
+class PaymentForm(forms.ModelForm):
+    class Meta:
+        model = Payment
+        fields = ['amount', 'notes']
+        labels = {
+            'amount': "To'lov summasi",
+            'notes': 'Izoh',
+        }
+        widgets = {
+            'amount': forms.NumberInput(attrs={'class': 'field-input', 'min': '0.01', 'step': '1'}),
+            'notes': forms.TextInput(attrs={'placeholder': 'Izoh', 'class': 'field-input'}),
+        }
+
+
+class ReserveAddForm(forms.Form):
+    """Zahiraga mebel qo'shish formasi."""
+    furniture = forms.ModelChoiceField(
+        queryset=Furniture.objects.all().order_by('name'),
+        label='Mebel',
+        empty_label='- Mebel tanlang -',
+        widget=forms.Select(attrs={'class': 'field-input'}),
+    )
+    quantity = forms.IntegerField(
+        label='Soni',
+        min_value=1,
+        initial=1,
+        widget=forms.NumberInput(attrs={'class': 'field-input', 'min': '1', 'step': '1', 'value': 1}),
+    )

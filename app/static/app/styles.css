@@ -35,7 +35,7 @@ body {
 .navbar {
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: white;
-  padding: 16px 0;
+  padding: 10px 0;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -46,31 +46,42 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 24px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .navbar-brand {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .navbar-brand h1 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 700;
 }
 
 .navbar-brand p {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: rgba(255,255,255,0.85);
+}
+
+.navbar-toggle {
+  display: none;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  font-size: 1.3rem;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
 .navbar-actions {
   display: flex;
-  gap: 12px;
+  gap: 6px;
   align-items: center;
   flex-wrap: wrap;
 }
@@ -78,9 +89,10 @@ body {
 .navbar-link {
   text-decoration: none;
   color: white;
-  padding: 8px 14px;
+  padding: 6px 10px;
   border-radius: 999px;
   font-weight: 600;
+  font-size: 0.9rem;
   transition: all 0.2s;
   border: 1px solid rgba(255,255,255,0.3);
 }
@@ -94,23 +106,31 @@ body {
   order: 3;
 }
 
-@media (max-width: 640px) {
-  .navbar-content {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .navbar-brand h1 {
-    font-size: 1.2rem;
-  }
-  
-  .navbar-brand p {
-    display: none;
+@media (max-width: 768px) {
+  .navbar-toggle {
+    display: block;
   }
   
   .navbar-actions {
+    display: none;
     width: 100%;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding-top: 8px;
+  }
+  
+  .navbar-actions.open {
+    display: flex;
+  }
+  
+  .navbar-link {
+    text-align: center;
+    padding: 10px 14px;
+  }
+  
+  .navbar-brand h1 {
+    font-size: 1.1rem;
   }
 }
 
@@ -204,6 +224,10 @@ body {
   margin-bottom: 16px;
   color: var(--muted);
   font-size: 0.95rem;
+}
+
+.reserve-quantity {
+  margin-bottom: 16px;
 }
 
 .price-list {
@@ -642,6 +666,138 @@ body {
   color: #991b1b;
   font-weight: 500;
   padding: 2px 0;
+}
+
+/* ===== Tables ===== */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.data-table th,
+.data-table td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.data-table thead th {
+  background: #f8fafc;
+  font-weight: 700;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  position: sticky;
+  top: 0;
+}
+
+.data-table tbody tr:hover {
+  background: #f1f5f9;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tfoot th,
+.data-table tfoot td {
+  background: #f8fafc;
+  font-weight: 700;
+  border-top: 2px solid var(--border);
+}
+
+.td-price {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.td-debt {
+  color: var(--danger);
+}
+
+.td-paid {
+  color: var(--success);
+}
+
+/* ===== Stat Cards ===== */
+.stat-card {
+  border-radius: 18px;
+  padding: 20px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.stat-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.stat-sub {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+/* ===== Badges ===== */
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.badge-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge-danger {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.badge-info {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+/* ===== Responsive tables ===== */
+@media (max-width: 768px) {
+  .data-table {
+    font-size: 0.85rem;
+  }
+  .data-table th,
+  .data-table td {
+    padding: 8px 10px;
+  }
+  .stat-card {
+    padding: 16px;
+  }
+  .stat-value {
+    font-size: 1.3rem;
+  }
 }
 
 @media (max-width: 640px) {

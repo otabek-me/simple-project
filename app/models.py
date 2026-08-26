@@ -1,5 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.conf import settings
+from django.utils import timezone
 from decimal import Decimal, ROUND_HALF_UP
 
 CENTS = Decimal('0.01')
@@ -7,6 +9,32 @@ CENTS = Decimal('0.01')
 def to_money(value):
     """Pul summalarini har doim izchil qoidada (0.5 -> yuqoriga) 2 xonaga yaxlitlaydi."""
     return value.quantize(CENTS, rounding=ROUND_HALF_UP)
+
+
+class Client(models.Model):
+    name = models.CharField(max_length=200, verbose_name="Ism")
+    phone = models.CharField(max_length=30, blank=True, null=True, verbose_name="Telefon")
+    address = models.TextField(blank=True, null=True, verbose_name="Manzil")
+    notes = models.TextField(blank=True, null=True, verbose_name="Izoh")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Qo'shilgan vaqt")
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = "Klient"
+        verbose_name_plural = "Klinetlar"
+
+    def __str__(self):
+        return self.name
+
+    def total_purchases(self):
+        return self.sales.filter(status='active').aggregate(total=models.Sum('total_amount'))['total'] or Decimal('0')
+
+    def total_paid(self):
+        return self.sales.filter(status='active').aggregate(total=models.Sum('paid_amount'))['total'] or Decimal('0')
+
+    def total_debt(self):
+        return self.total_purchases() - self.total_paid()
+
 
 class Detail(models.Model):
     name = models.CharField(max_length=120)
@@ -46,6 +74,11 @@ class Detail(models.Model):
 
 class Furniture(models.Model):
     name = models.CharField(max_length=120)
+    quantity = models.IntegerField(
+        default=1,
+        validators=[MinValueValidator(0)],
+        verbose_name="Zahiradagi soni",
+    )
     craft_fee_rate = models.DecimalField(
         max_digits=8,
         decimal_places=2,
@@ -121,6 +154,18 @@ class Furniture(models.Model):
                 to_update.append(fd)
         if to_update:
             FurnitureDetail.objects.bulk_update(to_update, ['price', 'name'])
+        return self
+
+    def add_quantity(self, amount):
+        """Zahiraga qo'shish (qaytarib olinganda)."""
+        self.quantity = self.quantity + amount
+        self.save(update_fields=['quantity'])
+        return self
+
+    def reduce_quantity(self, amount):
+        """Zahiradan kamaytirish (sotilganda)."""
+        self.quantity = self.quantity - amount
+        self.save(update_fields=['quantity'])
         return self
 
     def recalculate(self):
@@ -202,3 +247,188 @@ class FurnitureDetail(models.Model):
         super().save(*args, **kwargs)
 
 
+class Sale(models.Model):
+    PAYMENT_CHOICES = [
+        ('cash', 'Naqt'),
+        ('credit', 'Nasiya'),
+    ]
+    STATUS_CHOICES = [
+        ('active', 'Faol'),
+        ('cancelled', 'Bekor qilingan'),
+    ]
+
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default='active',
+        verbose_name="Holat",
+    )
+    cancelled_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Bekor qilingan vaqt",
+    )
+    cancelled_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='cancelled_sales',
+        verbose_name="Kim bekor qilgan",
+    )
+
+    client = models.ForeignKey(
+        Client,
+        related_name='sales',
+        on_delete=models.CASCADE,
+        verbose_name="Klient",
+    )
+    payment_type = models.CharField(
+        max_length=10,
+        choices=PAYMENT_CHOICES,
+        verbose_name="To'lov turi",
+    )
+    total_amount = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        verbose_name="Jami summa",
+    )
+    paid_amount = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        verbose_name="To'langan summa",
+    )
+    notes = models.TextField(blank=True, null=True, verbose_name="Izoh")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Kim qo'shgan",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Sotilgan vaqt")
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Sotuv"
+        verbose_name_plural = "Sotuvlar"
+
+    def __str__(self):
+        return f"{self.client.name} — {self.total_amount} ({self.get_payment_type_display()})"
+
+    def debt_amount(self):
+        return self.total_amount - self.paid_amount
+
+    def save(self, *args, **kwargs):
+        if self.payment_type == 'cash':
+            self.paid_amount = self.total_amount
+        super().save(*args, **kwargs)
+
+    def cancel(self, user=None):
+        """Sotuvni bekor qiladi va mebellarni zahiraga qaytaradi."""
+        if self.status == 'cancelled':
+            return self
+        self.status = 'cancelled'
+        self.cancelled_at = timezone.now()
+        self.cancelled_by = user
+        self.save()
+        # Mebellarni zahiraga qaytarish
+        for item in self.items.all():
+            if item.furniture:
+                item.furniture.add_quantity(item.quantity)
+        return self
+
+
+class SaleItem(models.Model):
+    sale = models.ForeignKey(
+        Sale,
+        related_name='items',
+        on_delete=models.CASCADE,
+        verbose_name="Sotuv",
+    )
+    furniture = models.ForeignKey(
+        Furniture,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Mebel",
+    )
+    furniture_name = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        verbose_name="Mebel nomi (saqlangan)",
+    )
+    quantity = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('1.00'),
+        validators=[MinValueValidator(Decimal('0.01'))],
+        verbose_name="Soni",
+    )
+    price_at_sale = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        verbose_name="Sotish narxi",
+    )
+    subtotal = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        verbose_name="Summa",
+    )
+
+    class Meta:
+        ordering = ['id']
+        verbose_name = "Sotuv mahsuloti"
+        verbose_name_plural = "Sotuv mahsulotlari"
+
+    def __str__(self):
+        name = self.furniture_name or (self.furniture.name if self.furniture else 'Noma\'lum')
+        return f"{name} × {self.quantity} = {self.subtotal}"
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        if self.furniture:
+            self.furniture_name = self.furniture.name
+            if not self.price_at_sale:
+                self.price_at_sale = self.furniture.total_price
+        self.subtotal = to_money(self.price_at_sale * self.quantity)
+        super().save(*args, **kwargs)
+        # Yangi sotuv elementi qo'shilganda mebel zahiradan kamayadi
+        if is_new and self.furniture and self.sale.status == 'active':
+            self.furniture.reduce_quantity(self.quantity)
+
+
+class Payment(models.Model):
+    sale = models.ForeignKey(
+        Sale,
+        related_name='payments',
+        on_delete=models.CASCADE,
+        verbose_name="Sotuv",
+    )
+    amount = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))],
+        verbose_name="Summa",
+    )
+    notes = models.TextField(blank=True, null=True, verbose_name="Izoh")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="To'lov vaqti")
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "To'lov"
+        verbose_name_plural = "To'lovlar"
+
+    def __str__(self):
+        return f"{self.sale.client.name} — {self.amount}"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Update sale paid_amount
+        sale = self.sale
+        total_paid = sale.payments.aggregate(total=models.Sum('amount'))['total'] or Decimal('0')
+        Sale.objects.filter(pk=sale.pk).update(paid_amount=total_paid)
