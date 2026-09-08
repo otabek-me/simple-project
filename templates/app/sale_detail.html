@@ -42,7 +42,7 @@
         </div>
         <div class="card">
             <div class="card-title">Kim qo'shgan</div>
-            <div style="font-weight: 600;">{{ sale.created_by.username|default:'Noma\'lum' }}</div>
+            <div style="font-weight: 600;">{% if sale.created_by %}{{ sale.created_by.username }}{% else %}Noma'lum{% endif %}</div>
         </div>
     </div>
 
@@ -81,7 +81,7 @@
                 {% for item in sale.items.all %}
                     <tr>
                         <td>{{ forloop.counter }}</td>
-                        <td>{{ item.furniture_name|default:item.furniture.name|default:'Noma\'lum' }}</td>
+                        <td>{{ item.display_name }}</td>
                         <td>{{ item.quantity }}</td>
                         <td class="td-price">{{ item.price_at_sale|format_price }}</td>
                         <td class="td-price">{{ item.subtotal|format_price }}</td>

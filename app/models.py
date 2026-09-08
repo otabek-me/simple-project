@@ -385,9 +385,24 @@ class SaleItem(models.Model):
         verbose_name = "Sotuv mahsuloti"
         verbose_name_plural = "Sotuv mahsulotlari"
 
+    @property
+    def display_name(self):
+        """Mebel nomini xavfsiz ko'rsatadi.
+
+        furniture_name (saqlangan snapshot) afzal; agar bo'lmasa joriy
+        furniture.name; agar mebel o'chirilgan bo'lsa 'Noma'lum'.
+        Bu xossa shablonlarda `item.furniture_name|default:item.furniture.name`
+        kabi eager-baholanadigan qarama-qarshi naqsh o'rniga ishlatiladi —
+        aks holda furniture=None bo'lganda VariableDoesNotExist chiqadi.
+        """
+        if self.furniture_name:
+            return self.furniture_name
+        if self.furniture:
+            return self.furniture.name
+        return 'Noma\'lum'
+
     def __str__(self):
-        name = self.furniture_name or (self.furniture.name if self.furniture else 'Noma\'lum')
-        return f"{name} × {self.quantity} = {self.subtotal}"
+        return f"{self.display_name} × {self.quantity} = {self.subtotal}"
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None

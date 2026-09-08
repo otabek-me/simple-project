@@ -102,7 +102,7 @@
                             <td>
                                 <div style="font-size: 0.85rem;">
                                     {% for item in sale.items.all %}
-                                        <div>{{ item.furniture_name|default:item.furniture.name|default:'Noma\'lum' }} × {{ item.quantity }}</div>
+                                        <div>{{ item.display_name }} × {{ item.quantity }}</div>
                                     {% endfor %}
                                 </div>
                             </td>
