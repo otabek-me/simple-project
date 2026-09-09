@@ -15,23 +15,26 @@
         </div>
 
         <div class="client-add-section" style="margin-bottom: 16px;">
-            <details>
-                <summary style="cursor: pointer; color: var(--primary); font-weight: 600; padding: 8px 0;">+ Yangi klient qo'shish</summary>
-                <div style="margin-top: 12px; padding: 16px; background: #f8fafc; border-radius: 14px; border: 1px solid var(--border);">
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label for="{{ form.new_client_name.id_for_label }}">{{ form.new_client_name.label }}</label>
-                            {{ form.new_client_name }}
-                            {{ form.new_client_name.errors }}
-                        </div>
-                        <div class="form-group">
-                            <label for="{{ form.new_client_phone.id_for_label }}">{{ form.new_client_phone.label }}</label>
-                            {{ form.new_client_phone }}
-                            {{ form.new_client_phone.errors }}
-                        </div>
+            <div style="padding: 16px; background: #f8fafc; border-radius: 14px; border: 1px solid var(--border);">
+                <h4 style="margin: 0 0 4px;">🆕 Yangi klient qo'shish</h4>
+                <p style="margin: 0 0 12px; color: var(--muted); font-size: 0.9rem;">
+                    Mavjud klientni tanlamasangiz ham bo'ladi — quyidagi maydonlarni to'ldiring va
+                    shu sahifaning pastidagi <strong>Saqlash</strong> tugmasini bosing. Yangi klient
+                    avtomatik ravishda yaratiladi.
+                </p>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="{{ form.new_client_name.id_for_label }}">{{ form.new_client_name.label }}</label>
+                        {{ form.new_client_name }}
+                        {{ form.new_client_name.errors }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.new_client_phone.id_for_label }}">{{ form.new_client_phone.label }}</label>
+                        {{ form.new_client_phone }}
+                        {{ form.new_client_phone.errors }}
                     </div>
                 </div>
-            </details>
+            </div>
         </div>
 
         <div class="detail-section">
@@ -70,7 +73,7 @@
                                 {{ form.price_at_sale.errors }}
                             </div>
                         </div>
-                        {% if formset.can_delete %}
+                        {% if formset.can_delete and form.instance.pk %}
                             <div class="delete-row">
                                 {{ form.DELETE }}
                                 <button type="button" class="button button-danger delete-item-btn" data-for="{{ form.DELETE.id_for_label }}">🗑️ O'chirish</button>
