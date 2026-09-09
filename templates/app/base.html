@@ -24,9 +24,9 @@
                 <a class="button button-primary" href="{% url 'furniture_create' %}">➕ Yangi</a>
                 {% if user.is_authenticated %}
                     <a class="navbar-link" href="{% url 'login' %}">🔑 Parol</a>
-                    <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                    <form method="post" action="{% url 'logout' %}">
                         {% csrf_token %}
-                        <button type="submit" class="navbar-link" style="background: transparent; border: none; cursor: pointer; padding: 8px 14px;">🚪 Chiqish</button>
+                        <button type="submit" class="navbar-link logout-link" style="background: transparent; border: none; cursor: pointer; padding: 8px 14px;">🚪 Chiqish</button>
                     </form>
                 {% else %}
                     <a class="navbar-link" href="{% url 'login' %}">Kirish</a>
