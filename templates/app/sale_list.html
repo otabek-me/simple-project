@@ -34,6 +34,8 @@
                         <th>Klient</th>
                         <th>Mebellar</th>
                         <th>Jami summa</th>
+                        <th>Tannarx</th>
+                        <th>Sof foyda</th>
                         <th>To'langan</th>
                         <th>Qarzdorlik</th>
                         <th>To'lov turi</th>
@@ -61,6 +63,8 @@
                                 </div>
                             </td>
                             <td class="td-price">{{ sale.total_amount|format_price }}</td>
+                            <td class="td-price">{{ sale.total_cost|format_price }}</td>
+                            <td class="td-price td-profit">{{ sale.profit_total|format_price }}</td>
                             <td class="td-price">{{ sale.paid_amount|format_price }}</td>
                             <td class="td-price {% if sale.debt_amount > 0 %}td-debt{% else %}td-paid{% endif %}">
                                 {{ sale.debt_amount|format_price }}

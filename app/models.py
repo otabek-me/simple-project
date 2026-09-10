@@ -198,6 +198,19 @@ class Furniture(models.Model):
         self.total_price = to_money(total)
         return self
 
+    @property
+    def tannarx(self):
+        """Birlik tannarxi (material + detal ustama + usta haqi).
+
+        Sotish narxidan egasining foydasi (owner_fee_amount) ayrib
+        tashlanganda ham aynan shu qiymat hosil bo'ladi.
+        """
+        return to_money(
+            self.material_total
+            + self.craft_fee_amount
+            + self.master_fee_amount
+        )
+
 
 class FurnitureDetail(models.Model):
     furniture = models.ForeignKey(
@@ -321,6 +334,14 @@ class Sale(models.Model):
     def debt_amount(self):
         return self.total_amount - self.paid_amount
 
+    def total_cost(self):
+        """Sotuv bo'yicha umumiy tannarx (barcha qatorlar)."""
+        return sum((item.cost_subtotal for item in self.items.all()), Decimal('0'))
+
+    def profit_total(self):
+        """Sotuv bo'yicha sof foyda (jami summa − umumiy tannarx)."""
+        return to_money(self.total_amount - self.total_cost())
+
     def save(self, *args, **kwargs):
         if self.payment_type == 'cash':
             self.paid_amount = self.total_amount
@@ -379,6 +400,12 @@ class SaleItem(models.Model):
         default=0,
         verbose_name="Summa",
     )
+    cost_at_sale = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        verbose_name="Birlik tannarxi",
+    )
 
     class Meta:
         ordering = ['id']
@@ -404,12 +431,24 @@ class SaleItem(models.Model):
     def __str__(self):
         return f"{self.display_name} × {self.quantity} = {self.subtotal}"
 
+    @property
+    def cost_subtotal(self):
+        """Ushbu qatorning umumiy tannarxi (birlik tannarxi × soni)."""
+        return to_money(self.cost_at_sale * self.quantity)
+
+    @property
+    def profit_subtotal(self):
+        """Ushbu qatorning sof foydasi (summa − tannarx)."""
+        return to_money(self.subtotal - self.cost_subtotal)
+
     def save(self, *args, **kwargs):
         is_new = self.pk is None
         if self.furniture:
             self.furniture_name = self.furniture.name
             if not self.price_at_sale:
                 self.price_at_sale = self.furniture.total_price
+            if not self.cost_at_sale:
+                self.cost_at_sale = self.furniture.tannarx
         self.subtotal = to_money(self.price_at_sale * self.quantity)
         super().save(*args, **kwargs)
         # Yangi sotuv elementi qo'shilganda mebel zahiradan kamayadi

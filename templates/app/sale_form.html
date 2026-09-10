@@ -56,7 +56,7 @@
                 {% for form in formset.forms %}
                     <div class="detail-row item-row">
                         {{ form.id }}
-                        <div class="grid-3">
+                        <div class="grid-4">
                             <div class="form-group">
                                 <label for="{{ form.furniture.id_for_label }}">{{ form.furniture.label }}</label>
                                 {{ form.furniture }}
@@ -72,6 +72,11 @@
                                 {{ form.price_at_sale }}
                                 {{ form.price_at_sale.errors }}
                             </div>
+                            <div class="form-group">
+                                <label for="{{ form.cost_at_sale.id_for_label }}">{{ form.cost_at_sale.label }}</label>
+                                {{ form.cost_at_sale }}
+                                {{ form.cost_at_sale.errors }}
+                            </div>
                         </div>
                         {% if formset.can_delete and form.instance.pk %}
                             <div class="delete-row">
@@ -84,23 +89,27 @@
             </div>
             <template id="empty-item-form">
                 <div class="detail-row item-row">
-                    <div class="grid-3">
+                    <div class="grid-4">
                         <div class="form-group">
                             <label for="id_items-__prefix__-furniture">Mebel</label>
                             <select name="items-__prefix__-furniture" class="field-input furniture-select" id="id_items-__prefix__-furniture">
                                 <option value="">- Mebel tanlang -</option>
                                 {% for f in furnitures %}
-                                    <option value="{{ f.pk }}" data-price="{{ f.total_price }}">{{ f.name }} ({{ f.quantity }} ta) — {{ f.total_price|format_price }}</option>
+                                    <option value="{{ f.pk }}" data-cost="{{ f.tannarx }}" data-price="{{ f.total_price }}">{{ f.name }} ({{ f.quantity }} ta) — {{ f.total_price|format_price }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="id_items-__prefix__-quantity">Soni</label>
-                            <input type="number" name="items-__prefix__-quantity" class="field-input quantity-input" id="id_items-__prefix__-quantity" min="0.01" step="1" value="1">
+                            <input type="number" name="items-__prefix__-quantity" class="field-input quantity-input" id="id_items-__prefix__-quantity" min="0.01" step="0.01" value="1">
                         </div>
                         <div class="form-group">
                             <label for="id_items-__prefix__-price_at_sale">Narxi</label>
-                            <input type="number" name="items-__prefix__-price_at_sale" class="field-input price-input" id="id_items-__prefix__-price_at_sale" min="0" step="1">
+                            <input type="number" name="items-__prefix__-price_at_sale" class="field-input price-input" id="id_items-__prefix__-price_at_sale" min="0" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="id_items-__prefix__-cost_at_sale">Tannarx</label>
+                            <input type="number" name="items-__prefix__-cost_at_sale" class="field-input cost-input" id="id_items-__prefix__-cost_at_sale" min="0" step="0.01">
                         </div>
                     </div>
                     <div class="delete-row">
@@ -127,17 +136,31 @@
         <section class="summary-card" id="sale-summary">
             <h3>Sotuv xulosasi</h3>
             <div class="summary-row"><span>Mebellar soni</span><strong id="preview-items-count">0</strong></div>
+            <div class="summary-row"><span>Jami tannarx</span><strong id="preview-total-cost" style="color: var(--muted);">0.00 so'm</strong></div>
             <div class="summary-row"><span>Jami summa</span><strong id="preview-total" style="color: var(--success); font-size: 1.3rem;">0.00 so'm</strong></div>
+            <div class="summary-row"><span>Sof foyda</span><strong id="preview-total-profit" style="color: var(--success);">0.00 so'm</strong></div>
         </section>
 
         <button type="submit" class="button button-primary full-width">Saqlash</button>
     </form>
 </section>
-
 <script>
 window.addEventListener('DOMContentLoaded', function() {
+    // Mebel bo'yicha narx va tannarx ma'lumotlari
+    var furnitureData = {
+        {% for f in furnitures %}
+            "{{ f.pk }}": { "cost": "{{ f.tannarx }}", "price": "{{ f.total_price }}" },
+        {% endfor %}
+    };
+
+    var fmt = function(v) {
+        if (isNaN(v)) v = 0;
+        return v.toLocaleString() + ' so\'m';
+    };
+
     function updateSalePreview() {
         let total = 0;
+        let totalCost = 0;
         let count = 0;
         document.querySelectorAll('#item-container .item-row').forEach(function(row) {
             const deleteCheckbox = row.querySelector('input[type="checkbox"][name*="-DELETE"]');
@@ -146,46 +169,57 @@ window.addEventListener('DOMContentLoaded', function() {
             const select = row.querySelector('.furniture-select');
             const qtyInput = row.querySelector('.quantity-input');
             const priceInput = row.querySelector('.price-input');
+            const costInput = row.querySelector('.cost-input');
             let quantity = qtyInput ? (parseFloat(qtyInput.value) || 0) : 0;
             let price = priceInput ? (parseFloat(priceInput.value) || 0) : 0;
+            let cost = costInput ? (parseFloat(costInput.value) || 0) : 0;
             if (!price && select && select.selectedIndex >= 0) {
                 const opt = select.options[select.selectedIndex];
                 price = parseFloat(opt.dataset.price) || 0;
             }
+            if (!cost && select && select.selectedIndex >= 0) {
+                const opt = select.options[select.selectedIndex];
+                cost = parseFloat(opt.dataset.cost) || 0;
+            }
             if (quantity > 0 && price > 0) {
                 total += price * quantity;
+                totalCost += cost * quantity;
                 count++;
             }
         });
         document.getElementById('preview-items-count').textContent = count;
-        document.getElementById('preview-total').textContent = total.toLocaleString() + ' so\'m';
+        document.getElementById('preview-total-cost').textContent = fmt(totalCost);
+        document.getElementById('preview-total').textContent = fmt(total);
+        document.getElementById('preview-total-profit').textContent = fmt(total - totalCost);
     }
 
-    // Auto-fill price when furniture is selected (always fill)
+    function fillFromSelect(opt, row) {
+        if (!opt) return;
+        const priceInput = row.querySelector('.price-input');
+        const costInput = row.querySelector('.cost-input');
+        if (priceInput) priceInput.value = opt.dataset.price || '';
+        if (costInput) costInput.value = opt.dataset.cost || '';
+    }
+
+    // Auto-fill price & cost when furniture is selected (always fill)
     document.body.addEventListener('change', function(e) {
-        if (e.target.matches('.furniture-select')) {
+        if (typeof e.target.matches === 'function' && e.target.matches('.furniture-select')) {
             const opt = e.target.options[e.target.selectedIndex];
-            const price = opt.dataset.price || '';
             const row = e.target.closest('.item-row');
-            if (row) {
-                const priceInput = row.querySelector('.price-input');
-                if (priceInput) {
-                    priceInput.value = price;
-                }
-            }
+            if (row) fillFromSelect(opt, row);
             updateSalePreview();
         }
     });
 
     document.body.addEventListener('input', function(e) {
-        if (e.target.matches('.quantity-input') || e.target.matches('.price-input')) {
+        if (typeof e.target.matches === 'function' && e.target.matches('.quantity-input, .price-input, .cost-input')) {
             updateSalePreview();
         }
     });
 
     // Handle delete checkbox change (using event delegation)
     document.body.addEventListener('change', function(e) {
-        if (e.target.matches('input[type="checkbox"][name*="-DELETE"]')) {
+        if (typeof e.target.matches === 'function' && e.target.matches('input[type="checkbox"][name*="-DELETE"]')) {
             const row = e.target.closest('.item-row');
             if (row) row.style.display = e.target.checked ? 'none' : 'block';
             updateSalePreview();
@@ -194,7 +228,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
     // Handle delete button clicks (using event delegation)
     document.body.addEventListener('click', function(e) {
-        const btn = e.target.closest('.delete-item-btn');
+        const btn = e.target.closest ? e.target.closest('.delete-item-btn') : null;
         if (!btn) return;
         e.preventDefault();
         const checkbox = document.getElementById(btn.getAttribute('data-for'));
@@ -217,13 +251,11 @@ window.addEventListener('DOMContentLoaded', function() {
             const emptyRow = document.querySelector('#empty-item-form').innerHTML.replace(/__prefix__/g, formIndex);
             container.insertAdjacentHTML('beforeend', emptyRow);
             totalForms.value = formIndex + 1;
-            // Auto-fill price if furniture is already selected in the new row
+            // Auto-fill price & cost if furniture is already selected in the new row
             const newRow = container.lastElementChild;
             const select = newRow.querySelector('.furniture-select');
-            const priceInput = newRow.querySelector('.price-input');
-            if (select && priceInput && select.selectedIndex > 0) {
-                const opt = select.options[select.selectedIndex];
-                priceInput.value = opt.dataset.price || '';
+            if (select && select.selectedIndex > 0) {
+                fillFromSelect(select.options[select.selectedIndex], newRow);
             }
             updateSalePreview();
         });

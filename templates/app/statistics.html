@@ -98,7 +98,9 @@
                                 <th>#</th>
                                 <th>Mebel</th>
                                 <th>Soni</th>
+                                <th>Tannarx</th>
                                 <th>Jami</th>
+                                <th>Sof foyda</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -107,7 +109,9 @@
                                     <td>{{ forloop.counter }}</td>
                                     <td>{{ item.furniture_name|default:'Noma\'lum' }}</td>
                                     <td>{{ item.total_quantity|floatformat:0 }}</td>
+                                    <td class="td-price">{{ item.cost_sum|format_price }}</td>
                                     <td class="td-price">{{ item.total_amount|format_price }}</td>
+                                    <td class="td-price td-profit">{{ item.profit_sum|format_price }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -195,6 +199,8 @@
                         <th>#</th>
                         <th>Klient</th>
                         <th>Summa</th>
+                        <th>Tannarx</th>
+                        <th>Sof foyda</th>
                         <th>To'lov turi</th>
                         <th>Sana</th>
                         <th>Amallar</th>
@@ -210,6 +216,8 @@
                                 </a>
                             </td>
                             <td class="td-price">{{ sale.total_amount|format_price }}</td>
+                            <td class="td-price">{{ sale.total_cost|format_price }}</td>
+                            <td class="td-price td-profit">{{ sale.profit_total|format_price }}</td>
                             <td>
                                 <span class="badge {% if sale.payment_type == 'cash' %}badge-success{% else %}badge-warning{% endif %}">
                                     {{ sale.get_payment_type_display }}

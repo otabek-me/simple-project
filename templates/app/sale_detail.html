@@ -74,7 +74,9 @@
                     <th>Mebel nomi</th>
                     <th>Soni</th>
                     <th>Narxi</th>
+                    <th>Tannarx</th>
                     <th>Summa</th>
+                    <th>Sof foyda</th>
                 </tr>
             </thead>
             <tbody>
@@ -84,15 +86,17 @@
                         <td>{{ item.display_name }}</td>
                         <td>{{ item.quantity }}</td>
                         <td class="td-price">{{ item.price_at_sale|format_price }}</td>
+                        <td class="td-price">{{ item.cost_subtotal|format_price }}</td>
                         <td class="td-price">{{ item.subtotal|format_price }}</td>
+                        <td class="td-price td-profit">{{ item.profit_subtotal|format_price }}</td>
                     </tr>
                 {% empty %}
-                    <tr><td colspan="5" class="notice">Hech qanday mebel topilmadi</td></tr>
+                    <tr><td colspan="7" class="notice">Hech qanday mebel topilmadi</td></tr>
                 {% endfor %}
             </tbody>
             <tfoot>
                 <tr>
-                    <th colspan="4" style="text-align: right;">Jami:</th>
+                    <th colspan="6" style="text-align: right;">Jami:</th>
                     <th class="td-price">{{ sale.total_amount|format_price }}</th>
                 </tr>
             </tfoot>
@@ -126,6 +130,18 @@
                 <form method="post" action="{% url 'sale_cancel' sale.pk %}" onsubmit="return confirm('Sotuvni bekor qilishni tasdiqlaysizmi? Mebellar zahiraga qaytariladi.');">
                     {% csrf_token %}
                     <button type="submit" class="button button-danger">❌ Sotuvni bekor qilish</button>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if sale.status == 'cancelled' %}
+        <div class="card" style="margin-bottom: 24px; border: 1px solid var(--danger);">
+            <div class="card-title" style="color: var(--danger);">Amallar</div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <form method="post" action="{% url 'sale_delete' sale.pk %}" onsubmit="return confirm('Bekor qilingan sotuvni butunlay o\'chirishni tasdiqlaysizmi? Bu amalni ortga qaytarib bo\'lmaydi.');">
+                    {% csrf_token %}
+                    <button type="submit" class="button button-danger">🗑️ Sotuvni o'chirish</button>
                 </form>
             </div>
         </div>
@@ -167,13 +183,18 @@
                     {% csrf_token %}
                     <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
                         <label for="id_amount">Summa</label>
-                        <input type="number" name="amount" class="field-input" id="id_amount" min="0.01" step="1" required>
+                        <input type="number" name="amount" class="field-input" id="id_amount" min="0.01" step="0.01" required>
                     </div>
                     <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
                         <label for="id_notes">Izoh</label>
                         <input type="text" name="notes" class="field-input" id="id_notes" placeholder="Izoh">
                     </div>
                     <button type="submit" class="button button-primary" name="payment_submit" value="1">To'lov qo'shish</button>
+                </form>
+                <hr style="margin: 16px 0; border: none; border-top: 1px solid var(--border, #e5e7eb);">
+                <form method="post" action="{% url 'close_credit' sale.pk %}" onsubmit="return confirm('Nasiyani to\'liq yopishni tasdiqlaysizmi? Qolgan summa ({{ sale.debt_amount|format_price }}) to\'langan deb qayd etiladi.');">
+                    {% csrf_token %}
+                    <button type="submit" class="button button-success">✅ Nasiyani to'liq yopish ({{ sale.debt_amount|format_price }})</button>
                 </form>
             </div>
         {% endif %}

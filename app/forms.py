@@ -216,16 +216,18 @@ class ClientForm(forms.ModelForm):
 class SaleItemForm(forms.ModelForm):
     class Meta:
         model = SaleItem
-        fields = ['furniture', 'quantity', 'price_at_sale']
+        fields = ['furniture', 'quantity', 'price_at_sale', 'cost_at_sale']
         labels = {
             'furniture': 'Mebel',
             'quantity': 'Soni',
             'price_at_sale': 'Narxi',
+            'cost_at_sale': 'Tannarx',
         }
         widgets = {
             'furniture': forms.Select(attrs={'class': 'field-input furniture-select'}),
             'quantity': forms.NumberInput(attrs={'class': 'field-input quantity-input', 'min': '0.01', 'step': '1', 'value': 1}),
-            'price_at_sale': forms.NumberInput(attrs={'class': 'field-input price-input', 'min': '0', 'step': '1'}),
+            'price_at_sale': forms.NumberInput(attrs={'class': 'field-input price-input', 'min': '0', 'step': '0.01'}),
+            'cost_at_sale': forms.NumberInput(attrs={'class': 'field-input cost-input', 'min': '0', 'step': '0.01'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -310,7 +312,7 @@ class PaymentForm(forms.ModelForm):
             'notes': 'Izoh',
         }
         widgets = {
-            'amount': forms.NumberInput(attrs={'class': 'field-input', 'min': '0.01', 'step': '1'}),
+            'amount': forms.NumberInput(attrs={'class': 'field-input', 'min': '0.01', 'step': '0.01'}),
             'notes': forms.TextInput(attrs={'placeholder': 'Izoh', 'class': 'field-input'}),
         }
 

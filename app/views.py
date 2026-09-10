@@ -9,7 +9,7 @@ from django.db.models.functions import TruncMonth, TruncDay
 from decimal import Decimal
 from django.utils import timezone
 
-from .models import Detail, Furniture, FurnitureDetail, Client, Sale, SaleItem, Payment
+from .models import Detail, Furniture, FurnitureDetail, Client, Sale, SaleItem, Payment, to_money
 from .forms import (
     DetailForm,
     FurnitureForm,
@@ -445,6 +445,43 @@ def sale_cancel(request, pk):
 
 
 @login_required
+def sale_delete(request, pk):
+    """Bekor qilingan sotuvni butunlay o'chirib tashlaydi."""
+    sale = get_object_or_404(Sale, pk=pk)
+    if request.method == 'POST':
+        if sale.status == 'cancelled':
+            sale.delete()
+            messages.success(request, "Bekor qilingan sotuv o'chirildi.")
+            return redirect(reverse('sale_list'))
+        else:
+            messages.warning(request, "Faqat bekor qilingan sotuvlarni o'chirish mumkin.")
+    return redirect(reverse('sale_detail', args=[pk]))
+
+
+@login_required
+def close_credit(request, pk):
+    """Nasiyani bir tugma bilan to'liq yopadi (qolgan summani to'laydi)."""
+    sale = get_object_or_404(Sale, pk=pk)
+    if request.method == 'POST':
+        if sale.status != 'active':
+            messages.warning(request, "Bu sotuv faol emas.")
+        elif sale.payment_type != 'credit':
+            messages.warning(request, "Bu sotuv nasiya emas.")
+        else:
+            remaining = sale.debt_amount()
+            if remaining > 0:
+                Payment.objects.create(
+                    sale=sale,
+                    amount=to_money(remaining),
+                    notes="Nasiya to'liq yopildi",
+                )
+                messages.success(request, f"Nasiya to'liq yopildi. Qolgan summa: {to_money(remaining)}")
+            else:
+                messages.info(request, "Nasiya allaqachon to'liq to'langan.")
+    return redirect(reverse('sale_detail', args=[pk]))
+
+
+@login_required
 def client_list(request):
     clients = Client.objects.annotate(
         total_purchases_sum=Sum('sales__total_amount', filter=Q(sales__status='active')),
@@ -488,9 +525,13 @@ def client_detail(request, pk):
                 furniture_stats[name] = {
                     'count': 0,
                     'total': Decimal('0'),
+                    'cost': Decimal('0'),
+                    'profit': Decimal('0'),
                 }
             furniture_stats[name]['count'] += int(item.quantity)
             furniture_stats[name]['total'] += item.subtotal
+            furniture_stats[name]['cost'] += item.cost_subtotal
+            furniture_stats[name]['profit'] += item.profit_subtotal
 
     return render(request, 'app/client_detail.html', {
         'client': client,
@@ -532,8 +573,15 @@ def statistics(request):
     top_furniture = SaleItem.objects.filter(sale__status='active').values('furniture_name').annotate(
         total_quantity=Sum('quantity'),
         total_amount=Sum('subtotal'),
+        cost_sum=Sum(
+            F('cost_at_sale') * F('quantity'),
+            output_field=DecimalField(max_digits=20, decimal_places=2),
+        ),
         count=Count('id'),
     ).order_by('-total_amount')[:10]
+    for tf_data in top_furniture:
+        tf_data['cost_sum'] = tf_data['cost_sum'] or Decimal('0')
+        tf_data['profit_sum'] = (tf_data['total_amount'] or Decimal('0')) - tf_data['cost_sum']
 
     # Monthly sales (faqat faol sotuvlar)
     monthly_sales = Sale.objects.filter(status='active').annotate(
@@ -614,4 +662,8 @@ def add_payment(request, pk):
             payment.sale = sale
             payment.save()
             messages.success(request, f"To'lov qo'shildi: {payment.amount}")
+        else:
+            for field, errs in form.errors.items():
+                for err in errs:
+                    messages.error(request, str(err))
     return redirect(reverse('sale_detail', args=[pk]))

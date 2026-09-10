@@ -60,7 +60,9 @@
                         <th>#</th>
                         <th>Mebel nomi</th>
                         <th>Soni</th>
+                        <th>Tannarx</th>
                         <th>Jami summa</th>
+                        <th>Sof foyda</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -69,7 +71,9 @@
                             <td>{{ forloop.counter }}</td>
                             <td>{{ name }}</td>
                             <td>{{ stats.count }}</td>
+                            <td class="td-price">{{ stats.cost|format_price }}</td>
                             <td class="td-price">{{ stats.total|format_price }}</td>
+                            <td class="td-price td-profit">{{ stats.profit|format_price }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -87,6 +91,8 @@
                         <th>#</th>
                         <th>Mebellar</th>
                         <th>Jami summa</th>
+                        <th>Tannarx</th>
+                        <th>Sof foyda</th>
                         <th>To'langan</th>
                         <th>Qarzdorlik</th>
                         <th>To'lov turi</th>
@@ -107,6 +113,8 @@
                                 </div>
                             </td>
                             <td class="td-price">{{ sale.total_amount|format_price }}</td>
+                            <td class="td-price">{{ sale.total_cost|format_price }}</td>
+                            <td class="td-price td-profit">{{ sale.profit_total|format_price }}</td>
                             <td class="td-price">{{ sale.paid_amount|format_price }}</td>
                             <td class="td-price {% if sale.debt_amount > 0 %}td-debt{% else %}td-paid{% endif %}">
                                 {{ sale.debt_amount|format_price }}
