@@ -69,17 +69,11 @@
                     {% for name, stats in furniture_stats.items %}
                         <tr>
                             <td data-label="#">{{ forloop.counter }}</td>
-                            <td>{{ forloop.counter }}</td>
                             <td data-label="Mebel nomi">{{ name }}</td>
                             <td data-label="Soni">{{ stats.count }}</td>
                             <td data-label="Tannarx" class="td-price">{{ stats.cost|format_price }}</td>
                             <td data-label="Jami summa" class="td-price">{{ stats.total|format_price }}</td>
                             <td data-label="Sof foyda" class="td-price td-profit">{{ stats.profit|format_price }}</td>
-                            <td>{{ name }}</td>
-                            <td>{{ stats.count }}</td>
-                            <td class="td-price">{{ stats.cost|format_price }}</td>
-                            <td class="td-price">{{ stats.total|format_price }}</td>
-                            <td class="td-price td-profit">{{ stats.profit|format_price }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -111,38 +105,32 @@
                     {% for sale in sales %}
                         <tr>
                             <td data-label="#">{{ forloop.counter }}</td>
-                            <td>{{ forloop.counter }}</td>
-                            <td>
+                            <td data-label="Mebellar">
                                 <div style="font-size: 0.85rem;">
                                     {% for item in sale.items.all %}
                                         <div>{{ item.display_name }} × {{ item.quantity }}</div>
                                     {% endfor %}
                                 </div>
+                            </td>
                             <td data-label="Jami summa" class="td-price">{{ sale.total_amount|format_price }}</td>
                             <td data-label="Tannarx" class="td-price">{{ sale.total_cost|format_price }}</td>
                             <td data-label="Sof foyda" class="td-price td-profit">{{ sale.profit_total|format_price }}</td>
                             <td data-label="To'langan" class="td-price">{{ sale.paid_amount|format_price }}</td>
-                            </td>
-                            <td class="td-price">{{ sale.total_amount|format_price }}</td>
-                            <td class="td-price">{{ sale.total_cost|format_price }}</td>
-                            <td class="td-price td-profit">{{ sale.profit_total|format_price }}</td>
-                            <td class="td-price">{{ sale.paid_amount|format_price }}</td>
-                            <td class="td-price {% if sale.debt_amount > 0 %}td-debt{% else %}td-paid{% endif %}">
+                            <td data-label="Qarzdorlik" class="td-price {% if sale.debt_amount > 0 %}td-debt{% else %}td-paid{% endif %}">
                                 {{ sale.debt_amount|format_price }}
                             </td>
-                            <td>
+                            <td data-label="To'lov turi">
                                 <span class="badge {% if sale.payment_type == 'cash' %}badge-success{% else %}badge-warning{% endif %}">
                                     {{ sale.get_payment_type_display }}
                                 </span>
                             </td>
-                            <td data-label="Sana" style="white-space: nowrap;">{{ sale.created_at|date:'Y-m-d H:i' }}</td>
-                            <td>
+                            <td data-label="Holat">
                                 <span class="badge {% if sale.status == 'active' %}badge-success{% else %}badge-danger{% endif %}">
                                     {{ sale.get_status_display }}
                                 </span>
                             </td>
-                            <td style="white-space: nowrap;">{{ sale.created_at|date:'Y-m-d H:i' }}</td>
-                            <td>
+                            <td data-label="Sana" style="white-space: nowrap;">{{ sale.created_at|date:'Y-m-d H:i' }}</td>
+                            <td data-label="Amallar">
                                 <a href="{% url 'sale_detail' sale.pk %}" class="button button-small button-secondary">Batafsil</a>
                             </td>
                         </tr>

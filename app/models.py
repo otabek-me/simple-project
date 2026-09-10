@@ -200,16 +200,8 @@ class Furniture(models.Model):
 
     @property
     def tannarx(self):
-        """Birlik tannarxi (material + detal ustama + usta haqi).
-
-        Sotish narxidan egasining foydasi (owner_fee_amount) ayrib
-        tashlanganda ham aynan shu qiymat hosil bo'ladi.
-        """
-        return to_money(
-            self.material_total
-            + self.craft_fee_amount
-            + self.master_fee_amount
-        )
+        """Birlik tannarxi (jami umumiy narxi, ustamalar bilan)."""
+        return self.total_price
 
 
 class FurnitureDetail(models.Model):

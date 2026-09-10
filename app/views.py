@@ -599,8 +599,8 @@ def statistics(request):
     for ms in monthly_sales:
         ms['debt'] = (ms['total'] or Decimal('0')) - (ms['paid'] or Decimal('0'))
 
-    # Recent sales
-    recent_sales = Sale.objects.select_related('client').prefetch_related('items__furniture').order_by('-created_at')[:10]
+    # Recent sales (faqat faol sotuvlar)
+    recent_sales = Sale.objects.filter(status='active').select_related('client').prefetch_related('items__furniture').order_by('-created_at')[:10]
 
     # Calculate debt clients (faqat faol sotuvlar)
     debt_clients_list = []
