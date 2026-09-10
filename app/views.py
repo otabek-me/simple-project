@@ -327,6 +327,8 @@ def sale_create(request):
     if request.method == 'POST':
         form = SaleForm(request.POST)
         formset = SaleItemFormSet(request.POST, prefix='items')
+        # On POST, don't add extra empty form — only show submitted forms
+        formset.extra = 0
 
         if form.is_valid() and formset.is_valid():
             sale = form.save(commit=False)
@@ -475,7 +477,10 @@ def close_credit(request, pk):
                     amount=to_money(remaining),
                     notes="Nasiya to'liq yopildi",
                 )
-                messages.success(request, f"Nasiya to'liq yopildi. Qolgan summa: {to_money(remaining)}")
+                # Nasiya to'liq yopilgach to'lov turini nasiyadan naqtga o'zgartirish
+                sale.payment_type = 'cash'
+                sale.save()
+                messages.success(request, f"Nasiya to'liq yopildi. Qolgan summa: {to_money(remaining)}. To'lov turi naqtga o'zgartirildi.")
             else:
                 messages.info(request, "Nasiya allaqachon to'liq to'langan.")
     return redirect(reverse('sale_detail', args=[pk]))

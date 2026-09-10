@@ -69,14 +69,14 @@
                         <tbody>
                             {% for client in top_clients %}
                                 <tr>
-                                    <td>{{ forloop.counter }}</td>
-                                    <td>
+                                    <td data-label="#">{{ forloop.counter }}</td>
+                                    <td data-label="Klient">
                                         <a href="{% url 'client_detail' client.pk %}" style="color: var(--primary); font-weight: 600; text-decoration: none;">
                                             {{ client.name }}
                                         </a>
                                     </td>
-                                    <td>{{ client.sales_count }}</td>
-                                    <td class="td-price">{{ client.total_purchases_sum|default:0|format_price }}</td>
+                                    <td data-label="Sotuvlar">{{ client.sales_count }}</td>
+                                    <td data-label="Jami" class="td-price">{{ client.total_purchases_sum|default:0|format_price }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -106,12 +106,12 @@
                         <tbody>
                             {% for item in top_furniture %}
                                 <tr>
-                                    <td>{{ forloop.counter }}</td>
-                                    <td>{{ item.furniture_name|default:'Noma\'lum' }}</td>
-                                    <td>{{ item.total_quantity|floatformat:0 }}</td>
-                                    <td class="td-price">{{ item.cost_sum|format_price }}</td>
-                                    <td class="td-price">{{ item.total_amount|format_price }}</td>
-                                    <td class="td-price td-profit">{{ item.profit_sum|format_price }}</td>
+                                    <td data-label="#">{{ forloop.counter }}</td>
+                                    <td data-label="Mebel">{{ item.furniture_name|default:'Noma\'lum' }}</td>
+                                    <td data-label="Soni">{{ item.total_quantity|floatformat:0 }}</td>
+                                    <td data-label="Tannarx" class="td-price">{{ item.cost_sum|format_price }}</td>
+                                    <td data-label="Jami" class="td-price">{{ item.total_amount|format_price }}</td>
+                                    <td data-label="Sof foyda" class="td-price td-profit">{{ item.profit_sum|format_price }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -139,7 +139,11 @@
             <tbody>
                 {% for month in monthly_sales %}
                     <tr>
+                        <td data-label="Oy" style="font-weight: 600;">{{ month.month|date:'Y-m' }}</td>
                         <td style="font-weight: 600;">{{ month.month|date:'Y-m' }}</td>
+                        <td data-label="Sotuvlar soni">{{ month.count }}</td>
+                        <td data-label="Jami summa" class="td-price">{{ month.total|default:0|format_price }}</td>
+                        <td data-label="To'langan" class="td-price">{{ month.paid|default:0|format_price }}</td>
                         <td>{{ month.count }}</td>
                         <td class="td-price">{{ month.total|default:0|format_price }}</td>
                         <td class="td-price">{{ month.paid|default:0|format_price }}</td>
@@ -172,11 +176,15 @@
                     {% for item in debt_clients %}
                         <tr>
                             <td>{{ forloop.counter }}</td>
+                            <td data-label="#">{{ forloop.counter }}</td>
                             <td>
                                 <a href="{% url 'client_detail' item.client.pk %}" style="color: var(--primary); font-weight: 600; text-decoration: none;">
                                     {{ item.client.name }}
                                 </a>
                             </td>
+                            <td data-label="Jami xarid" class="td-price">{{ item.purchases|format_price }}</td>
+                            <td data-label="To'langan" class="td-price">{{ item.paid|format_price }}</td>
+                            <td data-label="Qarzdorlik" class="td-price td-debt">{{ item.debt|format_price }}</td>
                             <td class="td-price">{{ item.purchases|format_price }}</td>
                             <td class="td-price">{{ item.paid|format_price }}</td>
                             <td class="td-price td-debt">{{ item.debt|format_price }}</td>
@@ -209,16 +217,21 @@
                 <tbody>
                     {% for sale in recent_sales %}
                         <tr>
+                            <td data-label="#">{{ forloop.counter }}</td>
                             <td>{{ forloop.counter }}</td>
                             <td>
                                 <a href="{% url 'client_detail' sale.client.pk %}" style="color: var(--primary); font-weight: 600; text-decoration: none;">
                                     {{ sale.client.name }}
                                 </a>
+                            <td data-label="Summa" class="td-price">{{ sale.total_amount|format_price }}</td>
+                            <td data-label="Tannarx" class="td-price">{{ sale.total_cost|format_price }}</td>
+                            <td data-label="Sof foyda" class="td-price td-profit">{{ sale.profit_total|format_price }}</td>
                             </td>
                             <td class="td-price">{{ sale.total_amount|format_price }}</td>
                             <td class="td-price">{{ sale.total_cost|format_price }}</td>
                             <td class="td-price td-profit">{{ sale.profit_total|format_price }}</td>
                             <td>
+                            <td data-label="Sana" style="white-space: nowrap;">{{ sale.created_at|date:'Y-m-d H:i' }}</td>
                                 <span class="badge {% if sale.payment_type == 'cash' %}badge-success{% else %}badge-warning{% endif %}">
                                     {{ sale.get_payment_type_display }}
                                 </span>

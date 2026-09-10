@@ -82,7 +82,14 @@
             <tbody>
                 {% for item in sale.items.all %}
                     <tr>
+                        <td data-label="#">{{ forloop.counter }}</td>
                         <td>{{ forloop.counter }}</td>
+                        <td data-label="Mebel nomi">{{ item.display_name }}</td>
+                        <td data-label="Soni">{{ item.quantity }}</td>
+                        <td data-label="Narxi" class="td-price">{{ item.price_at_sale|format_price }}</td>
+                        <td data-label="Tannarx" class="td-price">{{ item.cost_subtotal|format_price }}</td>
+                        <td data-label="Summa" class="td-price">{{ item.subtotal|format_price }}</td>
+                        <td data-label="Sof foyda" class="td-price td-profit">{{ item.profit_subtotal|format_price }}</td>
                         <td>{{ item.display_name }}</td>
                         <td>{{ item.quantity }}</td>
                         <td class="td-price">{{ item.price_at_sale|format_price }}</td>
@@ -163,6 +170,10 @@
                     <tbody>
                         {% for payment in sale.payments.all %}
                             <tr>
+                                <td data-label="#">{{ forloop.counter }}</td>
+                                <td data-label="Summa" class="td-price">{{ payment.amount|format_price }}</td>
+                                <td data-label="Izoh">{{ payment.notes|default:'-' }}</td>
+                                <td data-label="Sana" style="white-space: nowrap;">{{ payment.created_at|date:'Y-m-d H:i' }}</td>
                                 <td>{{ forloop.counter }}</td>
                                 <td class="td-price">{{ payment.amount|format_price }}</td>
                                 <td>{{ payment.notes|default:'-' }}</td>

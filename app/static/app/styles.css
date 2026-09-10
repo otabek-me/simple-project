@@ -872,3 +872,332 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== Mobile Responsive Enhancements ===== */
+
+/* Larger touch targets for buttons and inputs */
+@media (max-width: 768px) {
+  .button {
+    padding: 14px 20px;
+    font-size: 1rem;
+    min-height: 48px;
+  }
+  .button-small {
+    padding: 12px 16px;
+    min-height: 44px;
+  }
+  .field-input {
+    padding: 16px 18px;
+    font-size: 1rem;
+    min-height: 48px;
+  }
+  select.field-input {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+  }
+  textarea.field-input {
+    min-height: 80px;
+  }
+  .form-group {
+    margin-bottom: 20px;
+  }
+  .form-group label {
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+  }
+}
+
+/* Tables: convert to card layout on small screens */
+@media (max-width: 700px) {
+  .data-table thead {
+    display: none;
+  }
+  .data-table tbody tr {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+  .data-table tbody tr:hover {
+    background: var(--surface);
+  }
+  .data-table tbody tr:last-child td {
+    border-bottom: 1px solid var(--border);
+  }
+  .data-table tbody tr:last-child td:last-child {
+    border-bottom: none;
+  }
+  .data-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+    text-align: right;
+    white-space: normal;
+  }
+  .data-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--muted);
+    font-size: 0.85rem;
+    text-align: left;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+  .data-table tfoot tr {
+    display: block;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    margin-top: 8px;
+  }
+  .data-table tfoot th,
+  .data-table tfoot td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    background: transparent;
+    border-top: none;
+  }
+  .data-table tfoot th[colspan] {
+    display: none;
+  }
+  .data-table td:first-child {
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 1.05rem;
+  }
+  .td-price {
+    font-weight: 700;
+    font-size: 1rem;
+  }
+}
+
+/* Sale form: stack grid-4 into 2 columns on mobile */
+@media (max-width: 768px) {
+  .grid-4 {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .grid-4 .form-group {
+    margin-bottom: 0;
+  }
+  .grid-4 .form-group label {
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+  }
+  .item-row {
+    padding: 14px;
+    margin-bottom: 16px;
+  }
+  .item-row .delete-row {
+    margin-top: 14px;
+    padding-top: 14px;
+  }
+}
+
+/* Very small screens: single column for grid-4 */
+@media (max-width: 420px) {
+  .grid-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Sale detail: full-width cards on mobile */
+@media (max-width: 768px) {
+  .card-grid {
+    gap: 12px;
+  }
+  .card {
+    padding: 16px;
+    border-radius: 14px;
+  }
+  .card-title {
+    font-size: 0.9rem;
+  }
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .section-header .button {
+    width: 100%;
+  }
+  .card form[style*="display: flex"] {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+  .card form[style*="display: flex"] .form-group {
+    min-width: 100% !important;
+    flex: none !important;
+  }
+  .card form[style*="display: flex"] .button {
+    width: 100%;
+  }
+}
+
+/* Statistics page: stack grid on mobile */
+@media (max-width: 768px) {
+  .stat-card {
+    padding: 16px;
+  }
+  .stat-value {
+    font-size: 1.4rem;
+  }
+  .stat-label {
+    font-size: 0.78rem;
+  }
+  div[style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  div[style*="grid-template-columns: repeat(auto-fit"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 420px) {
+  div[style*="grid-template-columns: repeat(auto-fit"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Navbar improvements for mobile */
+@media (max-width: 1100px) {
+  .navbar-content {
+    flex-wrap: nowrap;
+  }
+  .navbar-brand h1 {
+    font-size: 1rem;
+  }
+  .navbar-actions {
+    padding: 12px 8px;
+    gap: 6px;
+  }
+  .navbar-actions .navbar-link {
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    text-align: left;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+  .navbar-actions .navbar-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .navbar-actions .button {
+    margin-top: 4px;
+  }
+}
+
+/* Filter form stack on mobile */
+@media (max-width: 640px) {
+  form[style*="display: flex"][style*="gap: 8px"] {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+  form[style*="display: flex"][style*="gap: 8px"] .field-input,
+  form[style*="display: flex"][style*="gap: 8px"] .button {
+    max-width: 100% !important;
+    width: 100%;
+    min-width: 100% !important;
+    flex: none !important;
+  }
+}
+
+/* Summary card on mobile */
+@media (max-width: 640px) {
+  .summary-card {
+    padding: 16px;
+  }
+  .summary-row {
+    font-size: 0.9rem;
+  }
+  .total-row {
+    font-size: 1.1rem;
+  }
+  .total-row strong {
+    font-size: 1.3rem;
+  }
+}
+
+/* Auth card on very small screens */
+@media (max-width: 420px) {
+  .auth-card {
+    padding: 20px 16px;
+    border-radius: 16px;
+  }
+  .auth-hero h2 {
+    font-size: 1.2rem;
+  }
+}
+
+/* Messages container on mobile */
+@media (max-width: 640px) {
+  .messages-container {
+    padding: 8px 12px;
+  }
+  .message {
+    padding: 12px 14px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Improve badge readability on mobile */
+@media (max-width: 640px) {
+  .badge {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+  }
+}
+
+/* Delete row touch-friendly */
+@media (max-width: 768px) {
+  .delete-row {
+    gap: 12px;
+  }
+  .delete-row input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+  }
+  .delete-label {
+    font-size: 0.9rem;
+  }
+  .delete-item-btn {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+  }
+}
+
+/* iOS input zoom prevention */
+@media (max-width: 768px) {
+  input[type="text"],
+  input[type="number"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="email"],
+  input[type="password"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Safe area padding for notched phones */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .container {
+    padding-left: max(18px, env(safe-area-inset-left));
+    padding-right: max(18px, env(safe-area-inset-right));
+  }
+  .navbar {
+    padding-top: env(safe-area-inset-top);
+  }
+}
