@@ -8,14 +8,16 @@
         <a class="button button-primary" href="{% url 'sale_create' %}">➕ Yangi sotuv</a>
     </div>
 
-    <form method="get" style="margin-bottom: 20px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+    <!-- Desktop filters - hidden on mobile -->
+    <form method="get" class="desktop-only-filters" style="margin-bottom: 20px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
         <input type="search" name="q" value="{{ query }}" placeholder="Klient nomi bo'yicha qidirish..." class="field-input" style="flex: 1; min-width: 220px;">
         <button type="submit" class="button button-secondary">Qidirish</button>
         <a class="button button-secondary" href="{% url 'client_list' %}">Hammasini ko'rsatish</a>
     </form>
 
     {% if clients %}
-        <div style="overflow-x: auto;">
+        <!-- Desktop table view -->
+        <div class="desktop-only-filters" style="overflow-x: auto;">
             <table class="data-table">
                 <thead>
                     <tr>
@@ -52,6 +54,17 @@
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+
+        <!-- Mobile simple list: name + debt + button in one line -->
+        <div class="mobile-only-cards mobile-simple-list">
+            {% for client in clients %}
+                <div class="mobile-simple-item">
+                    <span class="item-name">{{ client.name }}</span>
+                    <span class="item-price {% if client.total_debt|default:0 > 0 %}debt{% endif %}">{{ client.total_debt|default:0|format_price }}</span>
+                    <a href="{% url 'client_detail' client.pk %}" class="button button-secondary">Batafsil</a>
+                </div>
+            {% endfor %}
         </div>
     {% else %}
         <p class="notice">Hali hech qanday klient yo'q. Birinchi sotuvni amalga oshiring.</p>

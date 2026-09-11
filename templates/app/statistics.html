@@ -5,6 +5,28 @@
 <section class="panel">
     <h2>📊 Sotuv statistikasi</h2>
 
+    <!-- Date filter -->
+    <form method="get" style="margin-bottom: 24px; padding: 16px; background: #f8fafc; border-radius: 12px;">
+        <h4 style="margin: 0 0 12px 0;">📅 Sana bo'yicha filter</h4>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="month_filter" style="font-size: 0.85rem; font-weight: 600;">Oy bo'yicha:</label>
+                <input type="month" name="month" id="month_filter" value="{{ month_filter }}" class="field-input">
+            </div>
+            <div style="text-align: center; padding: 8px;">yoki</div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="date_from" style="font-size: 0.85rem; font-weight: 600;">Dan:</label>
+                <input type="date" name="date_from" id="date_from" value="{{ date_from }}" class="field-input">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="date_to" style="font-size: 0.85rem; font-weight: 600;">Gacha:</label>
+                <input type="date" name="date_to" id="date_to" value="{{ date_to }}" class="field-input">
+            </div>
+            <button type="submit" class="button button-primary">Filtrlash</button>
+            <a href="{% url 'statistics' %}" class="button button-secondary">Tozalash</a>
+        </div>
+    </form>
+
     <!-- Main stats cards -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
         <div class="stat-card" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">
@@ -16,6 +38,10 @@
             <div class="stat-value">{{ total_amount|format_price }}</div>
             <div class="stat-sub">so'm</div>
         </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">
+            <div class="stat-label">Tannarx</div>
+            <div class="stat-value">{{ total_cost|format_price }}</div>
+        </div>
         <div class="stat-card" style="background: linear-gradient(135deg, #16a34a, #15803d);">
             <div class="stat-label">To'langan</div>
             <div class="stat-value">{{ total_paid|format_price }}</div>
@@ -24,7 +50,7 @@
             <div class="stat-label">Qarzdorlik</div>
             <div class="stat-value">{{ total_debt|format_price }}</div>
         </div>
-        <div class="stat-card" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">
+        <div class="stat-card" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
             <div class="stat-label">Klinetlar</div>
             <div class="stat-value">{{ total_clients }}</div>
         </div>
@@ -150,53 +176,6 @@
                     {% endfor %}
                 </tbody>
             </table>
-    </div>
-
-    <!-- Recent sales -->
-    <h3>🕐 Oxirgi sotuvlar</h3>
-    <div style="overflow-x: auto;">
-        {% if recent_sales %}
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Klient</th>
-                        <th>Summa</th>
-                        <th>Tannarx</th>
-                        <th>Sof foyda</th>
-                        <th>To'lov turi</th>
-                        <th>Sana</th>
-                        <th>Amallar</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for sale in recent_sales %}
-                        <tr>
-                            <td data-label="#">{{ forloop.counter }}</td>
-                            <td data-label="Klient">
-                                <a href="{% url 'client_detail' sale.client.pk %}" style="color: var(--primary); font-weight: 600; text-decoration: none;">
-                                    {{ sale.client.name }}
-                                </a>
-                            </td>
-                            <td data-label="Summa" class="td-price">{{ sale.total_amount|format_price }}</td>
-                            <td data-label="Tannarx" class="td-price">{{ sale.total_cost|format_price }}</td>
-                            <td data-label="Sof foyda" class="td-price td-profit">{{ sale.profit_total|format_price }}</td>
-                            <td data-label="To'lov turi">
-                                <span class="badge {% if sale.payment_type == 'cash' %}badge-success{% else %}badge-warning{% endif %}">
-                                    {{ sale.get_payment_type_display }}
-                                </span>
-                            </td>
-                            <td data-label="Sana" style="white-space: nowrap;">{{ sale.created_at|date:'Y-m-d H:i' }}</td>
-                            <td data-label="Amallar">
-                                <a href="{% url 'sale_detail' sale.pk %}" class="button button-small button-secondary">Batafsil</a>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p class="notice">Hali hech qanday sotuv amalga oshirilmagan.</p>
-        {% endif %}
     </div>
 </section>
 {% endblock %}

@@ -4,7 +4,7 @@
 {% block content %}
     <section class="panel form-panel">
         <h2>Detallar</h2>
-        <form method="get" class="search-form" style="margin-bottom: 20px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+        <form method="get" class="desktop-only-filters search-form" style="margin-bottom: 20px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
             <input type="search" name="q" value="{{ query }}" placeholder="Detal qidirish..." class="field-input" style="flex: 1; min-width: 220px;">
             <button type="submit" class="button button-secondary">Qidirish</button>
             <a class="button button-primary" href="{% url 'detail_list' %}">Hammasini ko‘rsatish</a>

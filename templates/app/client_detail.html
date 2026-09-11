@@ -18,6 +18,10 @@
             <div class="stat-label">Jami xarid</div>
             <div class="stat-value" style="font-size: 1.2rem;">{{ total_purchases|format_price }}</div>
         </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">
+            <div class="stat-label">Tannarx</div>
+            <div class="stat-value" style="font-size: 1.2rem;">{{ total_cost|format_price }}</div>
+        </div>
         <div class="stat-card" style="background: linear-gradient(135deg, #16a34a, #15803d);">
             <div class="stat-label">To'langan</div>
             <div class="stat-value" style="font-size: 1.2rem;">{{ total_paid|format_price }}</div>
@@ -53,7 +57,7 @@
     <!-- Furniture stats -->
     {% if furniture_stats %}
         <h3>🛋️ Sotib olingan mebellar tahlili</h3>
-        <div style="overflow-x: auto; margin-bottom: 32px;">
+        <div class="desktop-only-filters" style="overflow-x: auto; margin-bottom: 32px;">
             <table class="data-table">
                 <thead>
                     <tr>
@@ -84,7 +88,7 @@
     <!-- Sales history -->
     <h3>📋 Sotuvlar tarixi</h3>
     {% if sales %}
-        <div style="overflow-x: auto;">
+        <div class="desktop-only-filters" style="overflow-x: auto;">
             <table class="data-table">
                 <thead>
                     <tr>
@@ -137,6 +141,19 @@
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+
+        <!-- Mobile simple list: furniture name + price + button -->
+        <div class="mobile-only-cards mobile-simple-list">
+            {% for sale in sales %}
+                <div class="mobile-simple-item">
+                    <span class="item-name">
+                        {% for item in sale.items.all %}{{ item.display_name }}{% if not forloop.last %}, {% endif %}{% empty %}Mebel yo'q{% endfor %}
+                    </span>
+                    <span class="item-price">{{ sale.total_amount|format_price }}</span>
+                    <a href="{% url 'sale_detail' sale.pk %}" class="button button-secondary">Batafsil</a>
+                </div>
+            {% endfor %}
         </div>
     {% else %}
         <p class="notice">Bu klient uchun hali hech qanday sotuv amalga oshirilmagan.</p>

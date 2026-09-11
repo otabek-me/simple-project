@@ -82,7 +82,7 @@ def auth_page(request):
 
 @login_required
 def furniture_list(request):
-    furnitures = list(Furniture.objects.prefetch_related('details__detail'))
+    furnitures = list(Furniture.objects.prefetch_related('details__detail').order_by('name'))
     # Ro'yxatda ham joriy detal narxlari bilan mos summa ko'rinsin
     dirty_fields = (
         'material_total',
@@ -269,7 +269,7 @@ def furniture_edit(request, pk):
 @login_required
 def detail_list(request):
     query = request.GET.get('q', '').strip()
-    details = Detail.objects.all()
+    details = Detail.objects.all().order_by('name')
     if query:
         details = details.filter(name__icontains=query)
     if request.method == 'POST':
@@ -510,20 +510,29 @@ def client_list(request):
 @login_required
 def client_detail(request, pk):
     client = get_object_or_404(Client, pk=pk)
-    sales = Sale.objects.filter(client=client).select_related('client').prefetch_related(
+    # Faqat nasiya (qarzdor) sotuvlarni ko'rsatish
+    sales = Sale.objects.filter(
+        client=client,
+        status='active'
+    ).select_related('client').prefetch_related(
         'items__furniture', 'payments'
     ).order_by('-created_at')
 
+    # Faqat nasiya sotuvlarni filtrlash (qarzdorligi bor yoki nasiya to'lov turi)
+    credit_sales = [s for s in sales if s.payment_type == 'credit' or s.debt_amount() > 0]
+
     total_purchases = Decimal('0')
     total_paid = Decimal('0')
-    for sale in sales:
+    total_cost = Decimal('0')
+    for sale in credit_sales:
         total_purchases += sale.total_amount
         total_paid += sale.paid_amount
+        total_cost += sale.total_cost()
     total_debt = total_purchases - total_paid
 
     # Sales by furniture type
     furniture_stats = {}
-    for sale in sales:
+    for sale in credit_sales:
         for item in sale.items.all():
             name = item.furniture_name or (item.furniture.name if item.furniture else 'Noma\'lum')
             if name not in furniture_stats:
@@ -540,10 +549,11 @@ def client_detail(request, pk):
 
     return render(request, 'app/client_detail.html', {
         'client': client,
-        'sales': sales,
+        'sales': credit_sales,
         'total_purchases': total_purchases,
         'total_paid': total_paid,
         'total_debt': total_debt,
+        'total_cost': total_cost,
         'furniture_stats': furniture_stats,
     })
 
@@ -552,12 +562,45 @@ def client_detail(request, pk):
 def statistics(request):
     # Overall statistics (faqat faol sotuvlar)
     active_sales = Sale.objects.filter(status='active')
+    
+    # Date filter
+    date_from = request.GET.get('date_from', '').strip()
+    date_to = request.GET.get('date_to', '').strip()
+    month_filter = request.GET.get('month', '').strip()
+    
+    if month_filter:
+        # Oy bo'yicha filter (format: YYYY-MM)
+        try:
+            year, month = map(int, month_filter.split('-'))
+            active_sales = active_sales.filter(created_at__year=year, created_at__month=month)
+        except (ValueError, AttributeError):
+            pass
+    elif date_from and date_to:
+        # Sana oralig'i bo'yicha filter
+        try:
+            active_sales = active_sales.filter(created_at__date__gte=date_from, created_at__date__lte=date_to)
+        except (ValueError, AttributeError):
+            pass
+    elif date_from:
+        try:
+            active_sales = active_sales.filter(created_at__date__gte=date_from)
+        except (ValueError, AttributeError):
+            pass
+    elif date_to:
+        try:
+            active_sales = active_sales.filter(created_at__date__lte=date_to)
+        except (ValueError, AttributeError):
+            pass
+    
     total_sales_count = active_sales.count()
     total_clients = Client.objects.count()
 
     total_amount = active_sales.aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
     total_paid = active_sales.aggregate(total=Sum('paid_amount'))['total'] or Decimal('0')
     total_debt = total_amount - total_paid
+    total_cost = active_sales.aggregate(
+        total=Sum(F('items__cost_at_sale') * F('items__quantity'), output_field=DecimalField(max_digits=20, decimal_places=2))
+    )['total'] or Decimal('0')
 
     cash_sales = active_sales.filter(payment_type='cash')
     cash_total = cash_sales.aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
@@ -599,9 +642,6 @@ def statistics(request):
     for ms in monthly_sales:
         ms['debt'] = (ms['total'] or Decimal('0')) - (ms['paid'] or Decimal('0'))
 
-    # Recent sales (faqat faol sotuvlar)
-    recent_sales = Sale.objects.filter(status='active').select_related('client').prefetch_related('items__furniture').order_by('-created_at')[:10]
-
     # Calculate debt clients (faqat faol sotuvlar)
     debt_clients_list = []
     for c in Client.objects.all():
@@ -624,6 +664,7 @@ def statistics(request):
         'total_amount': total_amount,
         'total_paid': total_paid,
         'total_debt': total_debt,
+        'total_cost': total_cost,
         'cash_total': cash_total,
         'credit_total': credit_total,
         'credit_paid': credit_paid,
@@ -631,8 +672,10 @@ def statistics(request):
         'top_clients': top_clients,
         'top_furniture': top_furniture,
         'monthly_sales': monthly_sales,
-        'recent_sales': recent_sales,
         'debt_clients': debt_clients_list,
+        'date_from': date_from,
+        'date_to': date_to,
+        'month_filter': month_filter,
     })
 
 

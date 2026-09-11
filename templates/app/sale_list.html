@@ -8,7 +8,8 @@
         <a class="button button-primary" href="{% url 'sale_create' %}">➕ Yangi sotuv</a>
     </div>
 
-    <form method="get" style="margin-bottom: 20px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+    <!-- Desktop filters - hidden on mobile -->
+    <form method="get" class="desktop-only-filters" style="margin-bottom: 20px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
         <input type="search" name="q" value="{{ query }}" placeholder="Klient nomi yoki izoh bo'yicha qidirish..." class="field-input" style="flex: 1; min-width: 200px;">
         <select name="payment" class="field-input" style="max-width: 150px;">
             <option value="">Barcha to'lov turlari</option>
@@ -26,7 +27,8 @@
     </form>
 
     {% if sales %}
-        <div style="overflow-x: auto;">
+        <!-- Desktop table view -->
+        <div class="desktop-only-filters" style="overflow-x: auto;">
             <table class="data-table">
                 <thead>
                     <tr>
@@ -56,7 +58,7 @@
                             <td data-label="Mebellar">
                                 <div style="font-size: 0.85rem;">
                                     {% for item in sale.items.all %}
-                                        <div>{{ item.display_name }} × {{ item.quantity }}</div>
+                                        <div>{{ item.display_name }} x {{ item.quantity }}</div>
                                     {% empty %}
                                         <span class="notice">Mebel yo'q</span>
                                     {% endfor %}
@@ -87,6 +89,17 @@
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+
+        <!-- Mobile simple list: name + price + button in one line -->
+        <div class="mobile-only-cards mobile-simple-list">
+            {% for sale in sales %}
+                <div class="mobile-simple-item">
+                    <span class="item-name">{% for item in sale.items.all %}{{ item.display_name }}{% if not forloop.last %}, {% endif %}{% empty %}Mebel yo'q{% endfor %}</span>
+                    <span class="item-price">{{ sale.total_amount|format_price }}</span>
+                    <a href="{% url 'sale_detail' sale.pk %}" class="button button-secondary">Batafsil</a>
+                </div>
+            {% endfor %}
         </div>
     {% else %}
         <p class="notice">Hali hech qanday sotuv amalga oshirilmagan.</p>
