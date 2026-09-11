@@ -1285,6 +1285,51 @@ body {
     padding: 8px 16px;
     font-size: 0.85rem;
   }
+
+  /* Statistics mobile items */
+  .stats-item {
+    align-items: center;
+  }
+
+  .stats-item .item-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+    font-size: 0.92rem;
+  }
+
+  .stats-values {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .stats-value-item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  .stats-value-label {
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .stats-value-num {
+    font-weight: 700;
+  }
+
+  .stats-value-item.profit .stats-value-num {
+    color: var(--success);
+  }
 }
 
 /* Desktop view (>= 769px) */

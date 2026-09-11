@@ -601,62 +601,25 @@ def statistics(request):
     total_cost = active_sales.aggregate(
         total=Sum(F('items__cost_at_sale') * F('items__quantity'), output_field=DecimalField(max_digits=20, decimal_places=2))
     )['total'] or Decimal('0')
+    total_profit = total_amount - total_cost
 
-    cash_sales = active_sales.filter(payment_type='cash')
-    cash_total = cash_sales.aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
-
-    credit_sales = active_sales.filter(payment_type='credit')
-    credit_total = credit_sales.aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
-    credit_paid = credit_sales.aggregate(total=Sum('paid_amount'))['total'] or Decimal('0')
-    credit_debt = credit_total - credit_paid
-
-    # Top clients (faqat faol sotuvlar)
-    top_clients = Client.objects.annotate(
-        total_purchases_sum=Sum('sales__total_amount', filter=Q(sales__status='active')),
-        total_paid_sum=Sum('sales__paid_amount', filter=Q(sales__status='active')),
-        sales_count=Count('sales', filter=Q(sales__status='active')),
-    ).filter(total_purchases_sum__isnull=False).order_by('-total_purchases_sum')[:10]
-
-    # Top furniture sold (faqat faol sotuvlar)
-    top_furniture = SaleItem.objects.filter(sale__status='active').values('furniture_name').annotate(
+    # Joriy oy sotilgan mebellar (jadval uchun)
+    now = timezone.now()
+    current_month_items = SaleItem.objects.filter(
+        sale__status='active',
+        sale__created_at__year=now.year,
+        sale__created_at__month=now.month,
+    ).values('furniture_name').annotate(
         total_quantity=Sum('quantity'),
         total_amount=Sum('subtotal'),
         cost_sum=Sum(
             F('cost_at_sale') * F('quantity'),
             output_field=DecimalField(max_digits=20, decimal_places=2),
         ),
-        count=Count('id'),
-    ).order_by('-total_amount')[:10]
-    for tf_data in top_furniture:
-        tf_data['cost_sum'] = tf_data['cost_sum'] or Decimal('0')
-        tf_data['profit_sum'] = (tf_data['total_amount'] or Decimal('0')) - tf_data['cost_sum']
-
-    # Monthly sales (faqat faol sotuvlar)
-    monthly_sales = Sale.objects.filter(status='active').annotate(
-        month=TruncMonth('created_at'),
-    ).values('month').annotate(
-        total=Sum('total_amount'),
-        paid=Sum('paid_amount'),
-        count=Count('id'),
-    ).order_by('-month')[:12]
-    for ms in monthly_sales:
-        ms['debt'] = (ms['total'] or Decimal('0')) - (ms['paid'] or Decimal('0'))
-
-    # Calculate debt clients (faqat faol sotuvlar)
-    debt_clients_list = []
-    for c in Client.objects.all():
-        purchases = c.total_purchases()
-        paid = c.total_paid()
-        debt = purchases - paid
-        if debt > 0:
-            debt_clients_list.append({
-                'client': c,
-                'purchases': purchases,
-                'paid': paid,
-                'debt': debt,
-            })
-    debt_clients_list.sort(key=lambda x: x['debt'], reverse=True)
-    debt_clients_list = debt_clients_list[:10]
+    ).order_by('-total_amount')
+    for cmi in current_month_items:
+        cmi['cost_sum'] = cmi['cost_sum'] or Decimal('0')
+        cmi['profit_sum'] = (cmi['total_amount'] or Decimal('0')) - cmi['cost_sum']
 
     return render(request, 'app/statistics.html', {
         'total_sales_count': total_sales_count,
@@ -665,14 +628,9 @@ def statistics(request):
         'total_paid': total_paid,
         'total_debt': total_debt,
         'total_cost': total_cost,
-        'cash_total': cash_total,
-        'credit_total': credit_total,
-        'credit_paid': credit_paid,
-        'credit_debt': credit_debt,
-        'top_clients': top_clients,
-        'top_furniture': top_furniture,
-        'monthly_sales': monthly_sales,
-        'debt_clients': debt_clients_list,
+        'total_profit': total_profit,
+        'current_month_items': current_month_items,
+        'now': now,
         'date_from': date_from,
         'date_to': date_to,
         'month_filter': month_filter,

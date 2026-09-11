@@ -175,7 +175,7 @@
                     {% csrf_token %}
                     <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
                         <label for="id_amount">Summa</label>
-                        <input type="number" name="amount" class="field-input" id="id_amount" min="0.01" step="0.01" required>
+                        <input type="text" name="amount" class="field-input money-input" id="id_amount" inputmode="decimal" required>
                     </div>
                     <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
                         <label for="id_notes">Izoh</label>

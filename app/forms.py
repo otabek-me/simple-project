@@ -163,7 +163,7 @@ class DetailForm(forms.ModelForm):
         }
         widgets = {
             'name': forms.TextInput(attrs={'placeholder': 'Detal nomi', 'class': 'field-input'}),
-            'price': forms.NumberInput(attrs={'placeholder': 'Narxi', 'class': 'field-input', 'step': '1', 'min': '0', 'inputmode': 'numeric', 'pattern': '[0-9]*'}),
+            'price': forms.TextInput(attrs={'placeholder': 'Narxi', 'class': 'field-input money-input', 'inputmode': 'decimal'}),
         }
         error_messages = {
             'name': {
@@ -226,8 +226,8 @@ class SaleItemForm(forms.ModelForm):
         widgets = {
             'furniture': forms.Select(attrs={'class': 'field-input furniture-select'}),
             'quantity': forms.NumberInput(attrs={'class': 'field-input quantity-input', 'min': '0.01', 'step': '1', 'value': 1}),
-            'price_at_sale': forms.NumberInput(attrs={'class': 'field-input price-input', 'min': '0', 'step': '0.01'}),
-            'cost_at_sale': forms.NumberInput(attrs={'class': 'field-input cost-input', 'min': '0', 'step': '0.01'}),
+            'price_at_sale': forms.TextInput(attrs={'class': 'field-input price-input money-input', 'inputmode': 'decimal'}),
+            'cost_at_sale': forms.TextInput(attrs={'class': 'field-input cost-input money-input', 'inputmode': 'decimal'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -312,7 +312,7 @@ class PaymentForm(forms.ModelForm):
             'notes': 'Izoh',
         }
         widgets = {
-            'amount': forms.NumberInput(attrs={'class': 'field-input', 'min': '0.01', 'step': '0.01'}),
+            'amount': forms.TextInput(attrs={'class': 'field-input money-input', 'placeholder': "To'lov summasi", 'inputmode': 'decimal'}),
             'notes': forms.TextInput(attrs={'placeholder': 'Izoh', 'class': 'field-input'}),
         }
 

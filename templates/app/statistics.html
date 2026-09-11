@@ -28,7 +28,7 @@
     </form>
 
     <!-- Main stats cards -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px;">
         <div class="stat-card" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">
             <div class="stat-label">Jami sotuvlar</div>
             <div class="stat-value">{{ total_sales_count }}</div>
@@ -36,15 +36,14 @@
         <div class="stat-card" style="background: linear-gradient(135deg, #059669, #047857);">
             <div class="stat-label">Jami summa</div>
             <div class="stat-value">{{ total_amount|format_price }}</div>
-            <div class="stat-sub">so'm</div>
         </div>
         <div class="stat-card" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">
             <div class="stat-label">Tannarx</div>
             <div class="stat-value">{{ total_cost|format_price }}</div>
         </div>
         <div class="stat-card" style="background: linear-gradient(135deg, #16a34a, #15803d);">
-            <div class="stat-label">To'langan</div>
-            <div class="stat-value">{{ total_paid|format_price }}</div>
+            <div class="stat-label">Sof foyda</div>
+            <div class="stat-value">{{ total_profit|format_price }}</div>
         </div>
         <div class="stat-card" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">
             <div class="stat-label">Qarzdorlik</div>
@@ -56,126 +55,60 @@
         </div>
     </div>
 
-    <!-- Naqt vs Nasiya -->
-    <h3>To'lov turlari bo'yicha</h3>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 32px;">
-        <div class="card">
-            <div class="card-title">💰 Naqt sotuvlar</div>
-            <div style="font-size: 1.4rem; font-weight: 700; color: var(--success);">{{ cash_total|format_price }}</div>
-        </div>
-        <div class="card">
-            <div class="card-title">📝 Nasiya sotuvlar</div>
-            <div style="font-size: 1.4rem; font-weight: 700; color: var(--primary);">{{ credit_total|format_price }}</div>
-        </div>
-        <div class="card">
-            <div class="card-title">✅ Nasiyadan to'langan</div>
-            <div style="font-size: 1.4rem; font-weight: 700; color: var(--success);">{{ credit_paid|format_price }}</div>
-        </div>
-        <div class="card">
-            <div class="card-title">⏳ Nasiyadan qolgan</div>
-            <div style="font-size: 1.4rem; font-weight: 700; color: var(--danger);">{{ credit_debt|format_price }}</div>
-        </div>
-    </div>
-
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
-        <!-- Top clients -->
-        <div class="card">
-            <h3 style="margin-top: 0;">🏆 Eng ko'p xarid qilganlar</h3>
-            {% if top_clients %}
-                <div style="overflow-x: auto;">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Klient</th>
-                                <th>Sotuvlar</th>
-                                <th>Jami</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for client in top_clients %}
-                                <tr>
-                                    <td data-label="#">{{ forloop.counter }}</td>
-                                    <td data-label="Klient">
-                                        <a href="{% url 'client_detail' client.pk %}" style="color: var(--primary); font-weight: 600; text-decoration: none;">
-                                            {{ client.name }}
-                                        </a>
-                                    </td>
-                                    <td data-label="Sotuvlar">{{ client.sales_count }}</td>
-                                    <td data-label="Jami" class="td-price">{{ client.total_purchases_sum|default:0|format_price }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <p class="notice">Hali hech qanday sotuv yo'q</p>
-            {% endif %}
-        </div>
-
-        <!-- Top furniture -->
-        <div class="card">
-            <h3 style="margin-top: 0;">🛋️ Eng ko'p sotilgan mebellar</h3>
-            {% if top_furniture %}
-                <div style="overflow-x: auto;">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Mebel</th>
-                                <th>Soni</th>
-                                <th>Tannarx</th>
-                                <th>Jami</th>
-                                <th>Sof foyda</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in top_furniture %}
-                                <tr>
-                                    <td data-label="#">{{ forloop.counter }}</td>
-                                    <td data-label="Mebel">{{ item.furniture_name|default:'Noma\'lum' }}</td>
-                                    <td data-label="Soni">{{ item.total_quantity|floatformat:0 }}</td>
-                                    <td data-label="Tannarx" class="td-price">{{ item.cost_sum|format_price }}</td>
-                                    <td data-label="Jami" class="td-price">{{ item.total_amount|format_price }}</td>
-                                    <td data-label="Sof foyda" class="td-price td-profit">{{ item.profit_sum|format_price }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <p class="notice">Hali hech qanday sotuv yo'q</p>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Monthly sales -->
-    <h3>📅 Oylik sotuvlar</h3>
-    <div style="overflow-x: auto; margin-bottom: 32px;">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Oy</th>
-                    <th>Sotuvlar soni</th>
-                    <th>Jami summa</th>
-                    <th>To'langan</th>
-                    <th>Qarzdorlik</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for month in monthly_sales %}
+    <!-- Current month sold items -->
+    <h3>📅 Joriy oy savdolari ({{ now|date:'F Y' }})</h3>
+    <div class="desktop-only-filters" style="overflow-x: auto;">
+        {% if current_month_items %}
+            <table class="data-table">
+                <thead>
                     <tr>
-                        <td data-label="Oy" style="font-weight: 600;">{{ month.month|date:'Y-m' }}</td>
-                        <td data-label="Sotuvlar soni">{{ month.count }}</td>
-                        <td data-label="Jami summa" class="td-price">{{ month.total|default:0|format_price }}</td>
-                        <td data-label="To'langan" class="td-price">{{ month.paid|default:0|format_price }}</td>
-                        <td data-label="Qarzdorlik" class="td-price {% if month.debt > 0 %}td-debt{% else %}td-paid{% endif %}">
-                            {{ month.debt|format_price }}
-                        </td>
+                        <th>#</th>
+                        <th>Mebel</th>
+                        <th>Soni</th>
+                        <th>Tannarx</th>
+                        <th>Sotilgan narxi</th>
+                        <th>Sof foyda</th>
                     </tr>
+                </thead>
+                <tbody>
+                    {% for item in current_month_items %}
+                        <tr>
+                            <td data-label="#">{{ forloop.counter }}</td>
+                            <td data-label="Mebel">{{ item.furniture_name|default:"Noma'lum" }}</td>
+                            <td data-label="Soni">{{ item.total_quantity|floatformat:0 }}</td>
+                            <td data-label="Tannarx" class="td-price">{{ item.cost_sum|format_price }}</td>
+                            <td data-label="Sotilgan narxi" class="td-price">{{ item.total_amount|format_price }}</td>
+                            <td data-label="Sof foyda" class="td-price td-profit">{{ item.profit_sum|format_price }}</td>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>
+        {% else %}
+            <p class="notice">Bu oyda hali hech qanday sotuv amalga oshirilmagan.</p>
+        {% endif %}
+    </div>
+
+    <!-- Mobile: compact one-line list (nomi + tannarx + sof foyda) -->
+    <div class="mobile-only-cards mobile-simple-list">
+        {% if current_month_items %}
+            {% for item in current_month_items %}
+                <div class="mobile-simple-item stats-item">
+                    <span class="item-name">{{ item.furniture_name|default:"Noma'lum" }}</span>
+                    <div class="stats-values">
+                        <span class="stats-value-item">
+                            <span class="stats-value-label">Tannarx</span>
+                            <span class="stats-value-num">{{ item.cost_sum|format_price }}</span>
+                        </span>
+                        <span class="stats-value-item profit">
+                            <span class="stats-value-label">Foyda</span>
+                            <span class="stats-value-num">{{ item.profit_sum|format_price }}</span>
+                        </span>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="notice">Bu oyda hali hech qanday sotuv amalga oshirilmagan.</p>
+        {% endif %}
     </div>
 </section>
 {% endblock %}

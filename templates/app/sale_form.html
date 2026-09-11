@@ -108,11 +108,11 @@
                         </div>
                         <div class="form-group">
                             <label for="id_items-__prefix__-price_at_sale">Narxi</label>
-                            <input type="number" name="items-__prefix__-price_at_sale" class="field-input price-input" id="id_items-__prefix__-price_at_sale" min="0" step="0.01">
+                            <input type="text" name="items-__prefix__-price_at_sale" class="field-input price-input money-input" id="id_items-__prefix__-price_at_sale" inputmode="decimal">
                         </div>
                         <div class="form-group">
                             <label for="id_items-__prefix__-cost_at_sale">Tannarx</label>
-                            <input type="number" name="items-__prefix__-cost_at_sale" class="field-input cost-input" id="id_items-__prefix__-cost_at_sale" min="0" step="0.01">
+                            <input type="text" name="items-__prefix__-cost_at_sale" class="field-input cost-input money-input" id="id_items-__prefix__-cost_at_sale" inputmode="decimal">
                         </div>
                     </div>
                     <div class="delete-row">
@@ -174,8 +174,8 @@ window.addEventListener('DOMContentLoaded', function() {
             const priceInput = row.querySelector('.price-input');
             const costInput = row.querySelector('.cost-input');
             let quantity = qtyInput ? (parseFloat(qtyInput.value) || 0) : 0;
-            let price = priceInput ? (parseFloat(priceInput.value) || 0) : 0;
-            let cost = costInput ? (parseFloat(costInput.value) || 0) : 0;
+            let price = priceInput ? (parseFloat(String(priceInput.value).replace(/[^\d.\-]/g, '')) || 0) : 0;
+            let cost = costInput ? (parseFloat(String(costInput.value).replace(/[^\d.\-]/g, '')) || 0) : 0;
             if (!price && select && select.selectedIndex >= 0) {
                 const opt = select.options[select.selectedIndex];
                 price = parseFloat(opt.dataset.price) || 0;

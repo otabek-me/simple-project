@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Mebel narxlash{% endblock %}</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'app/styles.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'app/styles.css' %}?v=3">
 </head>
 <body>
     <nav class="navbar">
@@ -37,6 +37,57 @@
     <main class="container">
         {% block content %}{% endblock %}
     </main>
+    <script>
+        // Money input: jonli formatlash (3 000 000)
+        (function() {
+            function formatMoney(value) {
+                // Faqat raqam va nuqta qoldiramiz
+                var v = String(value || '').replace(/[^\d.]/g, '');
+                // Bir nechta nuqta bo'lsa, faqat birinchisini saqlaymiz
+                var dotIndex = v.indexOf('.');
+                var intPart, decPart = '';
+                if (dotIndex !== -1) {
+                    intPart = v.slice(0, dotIndex);
+                    decPart = v.slice(dotIndex + 1).replace(/\./g, '');
+                    if (decPart.length > 0) decPart = '.' + decPart;
+                } else {
+                    intPart = v;
+                }
+                // Butun qismni bo'shliq bilan formatlash
+                var formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+                return formattedInt + decPart;
+            }
+
+            function bindMoneyInput(input) {
+                if (input.dataset.moneyBound) return;
+                input.dataset.moneyBound = '1';
+                input.addEventListener('input', function() {
+                    var formatted = formatMoney(this.value);
+                    this.value = formatted;
+                });
+            }
+
+            function bindAll() {
+                document.querySelectorAll('.money-input').forEach(bindMoneyInput);
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+                bindAll();
+                // Yangi qator qo'shilganda ham ulansin
+                var observer = new MutationObserver(function() {
+                    bindAll();
+                });
+                observer.observe(document.body, { childList: true, subtree: true });
+            });
+
+            // Yuborishda bo'shliqlarni olib tashlash (Django to'g'ri qabul qilsin)
+            document.addEventListener('submit', function(e) {
+                e.target.querySelectorAll('.money-input').forEach(function(input) {
+                    input.value = String(input.value).replace(/\s/g, '');
+                });
+            }, true);
+        })();
+    </script>
     <script>
         // Mobile menu toggle
         document.addEventListener('DOMContentLoaded', function() {
