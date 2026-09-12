@@ -13,7 +13,6 @@
         <input type="search" name="q" value="{{ query }}" placeholder="Klient nomi yoki izoh bo'yicha qidirish..." class="field-input" style="flex: 1; min-width: 200px;">
         <select name="payment" class="field-input" style="max-width: 150px;">
             <option value="">Barcha to'lov turlari</option>
-            <option value="cash" {% if payment_filter == 'cash' %}selected{% endif %}>Naqt</option>
             <option value="credit" {% if payment_filter == 'credit' %}selected{% endif %}>Nasiya</option>
             <option value="debt" {% if payment_filter == 'debt' %}selected{% endif %}>Qarzdorlik</option>
         </select>

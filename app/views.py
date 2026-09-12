@@ -380,7 +380,10 @@ def sale_create(request):
 
 @login_required
 def sale_list(request):
-    sales = Sale.objects.select_related('client').prefetch_related('items__furniture').all()
+    # Ro'yxatda faqat nasiya (ochiq qarz) sotuvlar ko'rinadi — naqt sotuvlar chiqmaydi.
+    sales = Sale.objects.select_related('client').prefetch_related('items__furniture').filter(
+        Q(payment_type='credit') | Q(total_amount__gt=F('paid_amount'))
+    )
     query = request.GET.get('q', '').strip()
     if query:
         sales = sales.filter(
