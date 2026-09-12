@@ -601,12 +601,21 @@ def statistics(request):
     total_cost = active_sales.aggregate(
         total=Sum(F('items__cost_at_sale') * F('items__quantity'), output_field=DecimalField(max_digits=20, decimal_places=2))
     )['total'] or Decimal('0')
-    total_profit = total_amount - total_cost
 
-    # Joriy oy sotilgan mebellar (jadval uchun)
+    # Sof foyda faqat naqt (cash) sotuvlardan hisoblanadi.
+    # Nasiya yoki hali to'liq yopilmagan savdolar foydaga qo'shilmaydi.
+    cash_sales = active_sales.filter(payment_type='cash')
+    cash_total_amount = cash_sales.aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+    cash_total_cost = cash_sales.aggregate(
+        total=Sum(F('items__cost_at_sale') * F('items__quantity'), output_field=DecimalField(max_digits=20, decimal_places=2))
+    )['total'] or Decimal('0')
+    total_profit = cash_total_amount - cash_total_cost
+
+    # Joriy oy sotilgan mebellar (jadval uchun) — faqat naqt sotuvlar
     now = timezone.now()
     current_month_items = SaleItem.objects.filter(
         sale__status='active',
+        sale__payment_type='cash',
         sale__created_at__year=now.year,
         sale__created_at__month=now.month,
     ).values('furniture_name').annotate(
