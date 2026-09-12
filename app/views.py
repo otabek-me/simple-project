@@ -611,11 +611,10 @@ def statistics(request):
     )['total'] or Decimal('0')
     total_profit = cash_total_amount - cash_total_cost
 
-    # Joriy oy sotilgan mebellar (jadval uchun) — faqat naqt sotuvlar
+    # Joriy oy sotilgan mebellar (jadval uchun)
     now = timezone.now()
     current_month_items = SaleItem.objects.filter(
         sale__status='active',
-        sale__payment_type='cash',
         sale__created_at__year=now.year,
         sale__created_at__month=now.month,
     ).values('furniture_name').annotate(
