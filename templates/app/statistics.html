@@ -28,6 +28,9 @@
     </form>
 
     <!-- Main stats cards -->
+    <p style="margin: 0 0 12px 0; color: var(--muted); font-size: 0.85rem;">
+        ℹ️ Tepa ko'rsatkichlar faqat ochiq nasiya savdolardan, <strong>"Sof foyda"</strong> esa faqat naqt savdolardan hisoblanadi.
+    </p>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px;">
         <div class="stat-card" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">
             <div class="stat-label">Jami sotuvlar</div>
@@ -56,7 +59,7 @@
     </div>
 
     <!-- Current month sold items -->
-    <h3>📅 Joriy oy savdolari ({{ now|date:'F Y' }})</h3>
+    <h3>📅 {% if month_filter %}{{ month_filter }} oyi savdolari{% elif date_from or date_to %}Savdolar{% if date_from %} dan {{ date_from }}{% endif %}{% if date_from and date_to %} – {% endif %}{% if date_to %} gacha {{ date_to }}{% endif %}{% else %}Joriy oy savdolari ({{ now|date:'F Y' }}){% endif %}</h3>
     <div class="desktop-only-filters" style="overflow-x: auto;">
         {% if current_month_items %}
             <table class="data-table">
@@ -93,6 +96,7 @@
         {% if current_month_items %}
             {% for item in current_month_items %}
                 <div class="mobile-simple-item stats-item">
+                    <span class="item-number">{{ forloop.counter }}</span>
                     <span class="item-name">{{ item.furniture_name|default:"Noma'lum" }}</span>
                     <div class="stats-values">
                         <span class="stats-value-item">

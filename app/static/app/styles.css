@@ -1269,6 +1269,23 @@ body {
     white-space: nowrap;
   }
 
+  .mobile-simple-item .item-number {
+    min-width: 24px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+
+  .mobile-simple-item .item-link {
+    color: var(--primary);
+    text-decoration: none;
+  }
+
+  .mobile-action {
+    margin: 0;
+    display: inline-flex;
+  }
+
   .mobile-simple-item .item-price {
     font-weight: 700;
     font-size: 0.95rem;

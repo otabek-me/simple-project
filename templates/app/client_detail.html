@@ -9,31 +9,16 @@
     </div>
 
     <!-- Client info cards -->
+    <h3 style="margin-top: 0;">📊 Nasiya xulosasi</h3>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
-        <div class="stat-card" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">
-            <div class="stat-label">Telefon</div>
-            <div class="stat-value" style="font-size: 1.1rem;">{{ client.phone|default:"Yo'q" }}</div>
-        </div>
         <div class="stat-card" style="background: linear-gradient(135deg, #059669, #047857);">
-            <div class="stat-label">Jami xarid</div>
+            <div class="stat-label">Nasiya jami xarid</div>
             <div class="stat-value" style="font-size: 1.2rem;">{{ total_purchases|format_price }}</div>
         </div>
         <div class="stat-card" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">
-            <div class="stat-label">Tannarx</div>
+            <div class="stat-label">Nasiya tannarxi</div>
             <div class="stat-value" style="font-size: 1.2rem;">{{ total_cost|format_price }}</div>
         </div>
-        {% if total_debt > 0 %}
-            <div class="stat-card" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">
-                <div class="stat-label">Qarzdorlik</div>
-                <div class="stat-value" style="font-size: 1.2rem;">{{ total_debt|format_price }}</div>
-            </div>
-        {% else %}
-            <div class="stat-card" style="background: linear-gradient(135deg, #16a34a, #15803d);">
-                <div class="stat-label">Qarzdorlik</div>
-                <div class="stat-value" style="font-size: 1.2rem; color: white;">0</div>
-                <div class="stat-sub">✅ To'liq to'langan</div>
-            </div>
-        {% endif %}
     </div>
 
     {% if client.address %}
@@ -75,11 +60,13 @@
                         <tr>
                             <td data-label="#">{{ forloop.counter }}</td>
                             <td data-label="Mebellar">
-                                <div style="font-size: 0.85rem;">
-                                    {% for item in sale.items.all %}
-                                        <div>{{ item.display_name }} × {{ item.quantity }}</div>
-                                    {% endfor %}
-                                </div>
+                                <a href="{% url 'sale_detail' sale.pk %}" style="color: var(--primary); text-decoration: none;">
+                                    <div style="font-size: 0.85rem;">
+                                        {% for item in sale.items.all %}
+                                            <div>{{ item.display_name }} × {{ item.quantity }}</div>
+                                        {% endfor %}
+                                    </div>
+                                </a>
                             </td>
                             <td data-label="Jami summa" class="td-price">{{ sale.total_amount|format_price }}</td>
                             <td data-label="Tannarx" class="td-price">{{ sale.total_cost|format_price }}</td>
@@ -100,7 +87,14 @@
                             </td>
                             <td data-label="Sana" style="white-space: nowrap;">{{ sale.created_at|date:'Y-m-d H:i' }}</td>
                             <td data-label="Amallar">
-                                <a href="{% url 'sale_detail' sale.pk %}" class="button button-small button-secondary">Batafsil</a>
+                                {% if sale.payment_type == 'credit' and sale.status == 'active' and sale.debt_amount > 0 %}
+                                    <form method="post" action="{% url 'close_credit' sale.pk %}" onsubmit="return confirm('Nasiyani to\'liq yopishni tasdiqlaysizmi? Qolgan summa ({{ sale.debt_amount|format_price }}) to\'langan deb qayd etiladi.');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="button button-small button-success">✅ Nasiyani yopish</button>
+                                    </form>
+                                {% else %}
+                                    <span class="notice">—</span>
+                                {% endif %}
                             </td>
                         </tr>
                     {% endfor %}
@@ -108,15 +102,21 @@
             </table>
         </div>
 
-        <!-- Mobile simple list: furniture name + price + button -->
+        <!-- Mobile simple list: number + name + price + action -->
         <div class="mobile-only-cards mobile-simple-list">
             {% for sale in sales %}
                 <div class="mobile-simple-item">
-                    <span class="item-name">
+                    <span class="item-number">{{ forloop.counter }}</span>
+                    <a href="{% url 'sale_detail' sale.pk %}" class="item-name item-link">
                         {% for item in sale.items.all %}{{ item.display_name }}{% if not forloop.last %}, {% endif %}{% empty %}Mebel yo'q{% endfor %}
-                    </span>
+                    </a>
                     <span class="item-price">{{ sale.total_amount|format_price }}</span>
-                    <a href="{% url 'sale_detail' sale.pk %}" class="button button-secondary">Batafsil</a>
+                    {% if sale.payment_type == 'credit' and sale.status == 'active' and sale.debt_amount > 0 %}
+                        <form method="post" action="{% url 'close_credit' sale.pk %}" class="mobile-action" onsubmit="return confirm('Nasiyani to\'liq yopishni tasdiqlaysizmi? Qolgan summa ({{ sale.debt_amount|format_price }}) to\'langan deb qayd etiladi.');">
+                            {% csrf_token %}
+                            <button type="submit" class="button button-small button-success" style="white-space: nowrap; padding: 6px 10px; font-size: 0.78rem;">✅ Yopish</button>
+                        </form>
+                    {% endif %}
                 </div>
             {% endfor %}
         </div>

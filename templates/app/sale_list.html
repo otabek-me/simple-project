@@ -56,13 +56,15 @@
                                 </a>
                             </td>
                             <td data-label="Mebellar">
-                                <div style="font-size: 0.85rem;">
-                                    {% for item in sale.items.all %}
-                                        <div>{{ item.display_name }} x {{ item.quantity }}</div>
-                                    {% empty %}
-                                        <span class="notice">Mebel yo'q</span>
-                                    {% endfor %}
-                                </div>
+                                <a href="{% url 'sale_detail' sale.pk %}" style="color: var(--primary); text-decoration: none;">
+                                    <div style="font-size: 0.85rem;">
+                                        {% for item in sale.items.all %}
+                                            <div>{{ item.display_name }} x {{ item.quantity }}</div>
+                                        {% empty %}
+                                            <span class="notice">Mebel yo'q</span>
+                                        {% endfor %}
+                                    </div>
+                                </a>
                             </td>
                             <td data-label="Jami summa" class="td-price">{{ sale.total_amount|format_price }}</td>
                             <td data-label="Tannarx" class="td-price">{{ sale.total_cost|format_price }}</td>
@@ -83,7 +85,14 @@
                             </td>
                             <td data-label="Sana" style="white-space: nowrap;">{{ sale.created_at|date:'Y-m-d H:i' }}</td>
                             <td data-label="Amallar">
-                                <a href="{% url 'sale_detail' sale.pk %}" class="button button-small button-secondary">Batafsil</a>
+                                {% if sale.payment_type == 'credit' and sale.status == 'active' and sale.debt_amount > 0 %}
+                                    <form method="post" action="{% url 'close_credit' sale.pk %}" onsubmit="return confirm('Nasiyani to\'liq yopishni tasdiqlaysizmi? Qolgan summa ({{ sale.debt_amount|format_price }}) to\'langan deb qayd etiladi.');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="button button-small button-success">✅ Nasiyani yopish</button>
+                                    </form>
+                                {% else %}
+                                    <span class="notice">—</span>
+                                {% endif %}
                             </td>
                         </tr>
                     {% endfor %}
@@ -95,9 +104,15 @@
         <div class="mobile-only-cards mobile-simple-list">
             {% for sale in sales %}
                 <div class="mobile-simple-item">
-                    <span class="item-name">{% for item in sale.items.all %}{{ item.display_name }}{% if not forloop.last %}, {% endif %}{% empty %}Mebel yo'q{% endfor %}</span>
+                    <span class="item-number">{{ forloop.counter }}</span>
+                    <a href="{% url 'sale_detail' sale.pk %}" class="item-name item-link">{% for item in sale.items.all %}{{ item.display_name }}{% if not forloop.last %}, {% endif %}{% empty %}Mebel yo'q{% endfor %}</a>
                     <span class="item-price">{{ sale.total_amount|format_price }}</span>
-                    <a href="{% url 'sale_detail' sale.pk %}" class="button button-secondary">Batafsil</a>
+                    {% if sale.payment_type == 'credit' and sale.status == 'active' and sale.debt_amount > 0 %}
+                        <form method="post" action="{% url 'close_credit' sale.pk %}" class="mobile-action" onsubmit="return confirm('Nasiyani to\'liq yopishni tasdiqlaysizmi? Qolgan summa ({{ sale.debt_amount|format_price }}) to\'langan deb qayd etiladi.');">
+                            {% csrf_token %}
+                            <button type="submit" class="button button-small button-success" style="white-space: nowrap; padding: 6px 10px; font-size: 0.78rem;">✅ Yopish</button>
+                        </form>
+                    {% endif %}
                 </div>
             {% endfor %}
         </div>

@@ -560,14 +560,16 @@ def client_detail(request, pk):
 
 @login_required
 def statistics(request):
-    # Overall statistics (faqat faol sotuvlar)
+    # Faol sotuvlar (asosiy to'plam)
     active_sales = Sale.objects.filter(status='active')
-    
+
     # Date filter
     date_from = request.GET.get('date_from', '').strip()
     date_to = request.GET.get('date_to', '').strip()
     month_filter = request.GET.get('month', '').strip()
-    
+
+    now = timezone.now()
+
     if month_filter:
         # Oy bo'yicha filter (format: YYYY-MM)
         try:
@@ -591,14 +593,18 @@ def statistics(request):
             active_sales = active_sales.filter(created_at__date__lte=date_to)
         except (ValueError, AttributeError):
             pass
-    
-    total_sales_count = active_sales.count()
-    total_clients = Client.objects.count()
 
-    total_amount = active_sales.aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
-    total_paid = active_sales.aggregate(total=Sum('paid_amount'))['total'] or Decimal('0')
+    # Tepa kartalar (Sof foyda bundan mustasno) — faqat ochiq nasiya savdolardan.
+    # Ochiq nasiya = to'lov turi nasiya YOKI hali to'liq to'lanmagan (qarzi bor).
+    credit_sales = active_sales.filter(
+        Q(payment_type='credit') | Q(paid_amount__lt=F('total_amount'))
+    )
+    total_sales_count = credit_sales.count()
+    total_clients = credit_sales.aggregate(total=Count('client', distinct=True))['total'] or 0
+    total_amount = credit_sales.aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+    total_paid = credit_sales.aggregate(total=Sum('paid_amount'))['total'] or Decimal('0')
     total_debt = total_amount - total_paid
-    total_cost = active_sales.aggregate(
+    total_cost = credit_sales.aggregate(
         total=Sum(F('items__cost_at_sale') * F('items__quantity'), output_field=DecimalField(max_digits=20, decimal_places=2))
     )['total'] or Decimal('0')
 
@@ -611,12 +617,34 @@ def statistics(request):
     )['total'] or Decimal('0')
     total_profit = cash_total_amount - cash_total_cost
 
-    # Joriy oy sotilgan mebellar (jadval uchun)
-    now = timezone.now()
+    # Pastdagi savdolar jadvali — berilgan filterga mos, aks holda joriy oy.
+    table_sales = Sale.objects.filter(status='active')
+    if month_filter:
+        try:
+            t_year, t_month = map(int, month_filter.split('-'))
+            table_sales = table_sales.filter(created_at__year=t_year, created_at__month=t_month)
+        except (ValueError, AttributeError):
+            table_sales = table_sales.filter(created_at__year=now.year, created_at__month=now.month)
+    elif date_from and date_to:
+        try:
+            table_sales = table_sales.filter(created_at__date__gte=date_from, created_at__date__lte=date_to)
+        except (ValueError, AttributeError):
+            table_sales = table_sales.filter(created_at__year=now.year, created_at__month=now.month)
+    elif date_from:
+        try:
+            table_sales = table_sales.filter(created_at__date__gte=date_from)
+        except (ValueError, AttributeError):
+            table_sales = table_sales.filter(created_at__year=now.year, created_at__month=now.month)
+    elif date_to:
+        try:
+            table_sales = table_sales.filter(created_at__date__lte=date_to)
+        except (ValueError, AttributeError):
+            table_sales = table_sales.filter(created_at__year=now.year, created_at__month=now.month)
+    else:
+        table_sales = table_sales.filter(created_at__year=now.year, created_at__month=now.month)
+
     current_month_items = SaleItem.objects.filter(
-        sale__status='active',
-        sale__created_at__year=now.year,
-        sale__created_at__month=now.month,
+        sale__in=table_sales,
     ).values('furniture_name').annotate(
         total_quantity=Sum('quantity'),
         total_amount=Sum('subtotal'),
